@@ -12,6 +12,8 @@ export async function streamAudio(fileId: string, reply: FastifyReply) {
     }
   )
 
+  console.log('response', response)
+
   reply.header('Content-Type', 'audio/mpeg')
   return reply.send(response.data)
 }
@@ -31,5 +33,15 @@ export async function streamThumbnail(fileId: string, reply: FastifyReply) {
   }
 
   return reply.redirect(thumbnailLink)
+}
+
+export async function getFilesInFolder(folderId: string) {
+  const response = await drive.files.list({
+    q: `'${folderId}' in parents and trashed = false`,
+    fields: 'files(id, name, mimeType, thumbnailLink)',
+  })
+
+  const files = response.data.files ?? []
+  return files
 }
 

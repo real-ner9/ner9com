@@ -1,125 +1,207 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
-import { fetchExampleMessage } from '@/services/example.service'
-import { getAudioStreamUrl, getThumbnailUrl } from '@/services/media.service'
+import { watch } from 'vue'
+import { storeToRefs } from 'pinia'
+import { useRoute, useRouter } from 'vue-router'
+import { useDrivePickerStore } from '@/stores/drive-picker'
+import {
+  useBreadcrumbs,
+  encodeBreadcrumbPath,
+  decodeBreadcrumbPath,
+  type DriveBreadcrumb
+} from '@/composables/useBreadcrumbs'
+import { isDriveFolder, type DriveFile } from '@/services/drive.service'
+import DriveBreadcrumbs from '@/components/drive-picker/DriveBreadcrumbs.vue'
+import DrivePlayer from '@/components/drive-picker/DrivePlayer.vue'
 
-const exampleMessage = ref('')
-const isLoading = ref(false)
-const errorMessage = ref<string | null>(null)
-const driveFileId = ref('')
-const audioSrc = computed(() => getAudioStreamUrl(driveFileId.value))
-const thumbnailSrc = computed(() => getThumbnailUrl(driveFileId.value))
+const router = useRouter()
+const route = useRoute()
 
-/**
- * Fetch demo data from the Fastify backend.
- */
-async function loadExampleMessage() {
-  errorMessage.value = null
-  isLoading.value = true
+const drivePickerStore = useDrivePickerStore()
+const breadcrumbState = useBreadcrumbs()
+const { filteredFiles, searchQuery, isLoading, errorMessage, selectedTrack } =
+  storeToRefs(drivePickerStore)
+const { breadcrumbs, canGoBack } = breadcrumbState
 
-  try {
-    exampleMessage.value = await fetchExampleMessage()
-  } catch (error) {
-    if (error instanceof Error) {
-      errorMessage.value = error.message
-      return
-    }
-    errorMessage.value = 'Unknown API error'
-  } finally {
-    isLoading.value = false
-  }
+function resolveQueryValue(value: unknown) {
+  if (Array.isArray(value)) return value[0]
+  if (typeof value === 'string') return value
+  return undefined
 }
 
-onMounted(() => {
-  void loadExampleMessage()
-})
+async function ensureRootQuery(path?: DriveBreadcrumb[]) {
+  if (route.query.folderId || !drivePickerStore.rootFolderId) return
+  const trail =
+    path ??
+    [
+      {
+        id: drivePickerStore.rootFolderId,
+        name: drivePickerStore.rootFolderLabel
+      }
+    ]
+  await router.replace({
+    query: {
+      ...route.query,
+      folderId: drivePickerStore.rootFolderId,
+      folderName: drivePickerStore.rootFolderLabel,
+      path: encodeBreadcrumbPath(trail)
+    }
+  })
+}
+
+watch(
+  () => [route.query.folderId, route.query.folderName, route.query.path],
+  async ([folderIdRaw, folderNameRaw, pathRaw]) => {
+    const folderIdFromQuery = resolveQueryValue(folderIdRaw)
+    const folderNameFromQuery = resolveQueryValue(folderNameRaw)
+    const decodedPath = decodeBreadcrumbPath(resolveQueryValue(pathRaw))
+
+    if (!decodedPath.length && folderIdFromQuery === drivePickerStore.rootFolderId) {
+      decodedPath.push({
+        id: drivePickerStore.rootFolderId,
+        name: folderNameFromQuery ?? drivePickerStore.rootFolderLabel
+      })
+    }
+
+    if (!decodedPath.length) {
+      await ensureRootQuery()
+      return
+    }
+
+    const target = decodedPath[decodedPath.length - 1]
+    const effectiveFolderId = target.id || folderIdFromQuery
+    const effectiveFolderName = target.name || folderNameFromQuery || 'Folder'
+
+    if (!effectiveFolderId) {
+      await ensureRootQuery(decodedPath)
+      return
+    }
+
+    breadcrumbState.setTrail(decodedPath)
+    await drivePickerStore.loadFolder(effectiveFolderId, effectiveFolderName)
+  },
+  { immediate: true }
+)
+
+function handleFileClick(file: DriveFile) {
+  if (isDriveFolder(file)) {
+    breadcrumbState.append({ id: file.id, name: file.name })
+    void router.push({
+      query: {
+        ...route.query,
+        folderId: file.id,
+        folderName: file.name,
+        path: encodeBreadcrumbPath(breadcrumbs.value)
+      }
+    })
+    return
+  }
+
+  drivePickerStore.setSelectedTrack(file)
+}
+
+function handleGoBack() {
+  if (!canGoBack.value) return
+  const newTrail = breadcrumbState.removeLast()
+  const target = newTrail[newTrail.length - 1]
+  void router.push({
+    query: {
+      ...route.query,
+      folderId: target.id,
+      folderName: target.name,
+      path: encodeBreadcrumbPath(newTrail)
+    }
+  })
+}
 </script>
 
 <template>
-  <main>
-    <h1>Main page</h1>
-    <section class="api-block">
-      <p class="section-title">Backend example response</p>
+  <main class="library">
+    <DrivePlayer :track="selectedTrack" />
+    <section class="picker">
+      <header class="picker-header">
+        <div>
+          <h1 class="title">Music picker</h1>
+          <p class="subtitle">Найди альбом на Google Drive</p>
+        </div>
+        <button
+          class="back-button"
+          type="button"
+          :disabled="!canGoBack"
+          @click="handleGoBack"
+        >
+          Назад
+        </button>
+      </header>
 
-      <p v-if="isLoading" class="status">Loading from Fastify…</p>
-      <p v-else-if="errorMessage" class="status error">{{ errorMessage }}</p>
-      <p v-else class="status success">{{ exampleMessage }}</p>
+      <DriveBreadcrumbs :breadcrumbs="breadcrumbs" />
 
-      <button
-        class="reload-button"
-        type="button"
-        :disabled="isLoading"
-        @click="loadExampleMessage"
-      >
-        {{ isLoading ? 'Refreshing…' : 'Reload message' }}
-      </button>
-    </section>
-
-    <section class="player-block">
-      <p class="section-title">Google Drive player</p>
-      <label class="input-label">
-        Drive file ID
+      <div class="picker-controls">
         <input
-          v-model="driveFileId"
-          class="file-input"
-          type="text"
-          placeholder="Paste Google Drive file ID"
+          v-model="searchQuery"
+          class="search-input"
+          placeholder="Поиск по альбомам и трекам"
         />
-      </label>
-
-      <div v-if="thumbnailSrc" class="preview">
-        <img :src="thumbnailSrc" alt="Track artwork" loading="lazy" />
       </div>
 
-      <audio
-        v-if="audioSrc"
-        class="audio-player"
-        :src="audioSrc"
-        controls
-        preload="none"
-      >
-        Your browser does not support the audio element.
-      </audio>
+      <p v-if="errorMessage" class="status error">{{ errorMessage }}</p>
+      <p v-else-if="isLoading" class="status">Загрузка...</p>
+      <p v-else-if="!filteredFiles.length" class="status">Ничего не найдено</p>
 
-      <p class="hint">
-        Make sure this file is shared with the service account before playing.
-      </p>
+      <ul v-else class="file-list">
+        <li
+          v-for="file in filteredFiles"
+          :key="file.id"
+        >
+          <button class="file-row" type="button" @click="handleFileClick(file)">
+            <div class="file-text">
+              <span class="file-name">{{ file.name }}</span>
+              <span class="file-meta">
+                {{ isDriveFolder(file) ? 'Папка' : 'Трек' }}
+              </span>
+            </div>
+          </button>
+        </li>
+      </ul>
     </section>
   </main>
 </template>
 
 <style scoped>
-.api-block {
-  margin-top: 24px;
-  padding: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
+.library {
+  padding: 24px;
+}
+
+.picker {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 16px;
+  padding: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  background: rgba(15, 23, 42, 0.4);
 }
 
-.section-title {
-  font-size: 18px;
+.picker-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.title {
+  font-size: 24px;
   font-weight: 600;
+  margin: 0;
 }
 
-.status {
-  font-size: 16px;
+.subtitle {
+  margin: 0;
+  font-size: 14px;
+  color: #94a3b8;
 }
 
-.status.success {
-  color: #4ade80;
-}
-
-.status.error {
-  color: #f87171;
-}
-
-.reload-button {
-  align-self: flex-start;
-  padding: 10px 16px;
-  border-radius: 10px;
+.back-button {
+  padding: 8px 16px;
+  border-radius: 8px;
   border: 1px solid rgba(148, 163, 184, 0.4);
   background: transparent;
   color: inherit;
@@ -127,35 +209,23 @@ onMounted(() => {
   transition: border-color 0.2s, transform 0.2s;
 }
 
-.reload-button:disabled {
-  opacity: 0.6;
+.back-button:disabled {
+  opacity: 0.5;
   cursor: not-allowed;
 }
 
-.reload-button:not(:disabled):hover {
+.back-button:not(:disabled):hover {
   border-color: #4ade80;
   transform: translateY(-1px);
 }
 
-.player-block {
-  margin-top: 32px;
-  padding: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
+.picker-controls {
   display: flex;
-  flex-direction: column;
-  gap: 16px;
+  gap: 12px;
 }
 
-.input-label {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  font-size: 14px;
-  color: #cbd5f5;
-}
-
-.file-input {
+.search-input {
+  flex: 1;
   padding: 10px 12px;
   border-radius: 8px;
   border: 1px solid rgba(148, 163, 184, 0.4);
@@ -163,17 +233,57 @@ onMounted(() => {
   color: inherit;
 }
 
-.preview img {
-  max-width: 260px;
-  border-radius: 8px;
+.status {
+  font-size: 14px;
+  color: #cbd5f5;
 }
 
-.audio-player {
+.status.error {
+  color: #f87171;
+}
+
+.file-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.file-row {
   width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
 }
 
-.hint {
-  font-size: 13px;
+.file-row:hover {
+  border-color: #4ade80;
+  background: rgba(74, 222, 128, 0.05);
+}
+
+.file-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: flex-start;
+}
+
+.file-name {
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.file-meta {
+  font-size: 12px;
   color: #94a3b8;
 }
 </style>

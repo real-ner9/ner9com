@@ -1,20 +1,5 @@
-const DEFAULT_API_BASE_URL = '/api'
+export const apiBaseUrl = import.meta.env.VITE_API_BASE_URL
 
-/**
- * Normalize the provided base URL by trimming the trailing slash.
- * @param rawValue Base URL supplied via environment variables.
- * @returns Sanitized base URL without a trailing slash.
- */
-function normalizeBaseUrl(rawValue: string | undefined) {
-  if (!rawValue) return DEFAULT_API_BASE_URL
-  return rawValue.endsWith('/') ? rawValue.slice(0, -1) : rawValue
-}
-
-export const apiBaseUrl = normalizeBaseUrl(import.meta.env.VITE_API_BASE_URL)
-
-/**
- * Optional configuration for API requests.
- */
 export interface RequestOptions {
   readonly signal?: AbortSignal
 }
@@ -41,9 +26,9 @@ export async function apiGet<TResponse = unknown>(
 
   const contentType = response.headers.get('content-type') ?? ''
   if (contentType.includes('application/json')) {
-    return (await response.json()) as TResponse
+    return response.json()
   }
 
-  return (await response.text()) as TResponse
+  return response.text()
 }
 
