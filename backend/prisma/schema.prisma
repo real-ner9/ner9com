@@ -1,0 +1,30 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Participant {
+  id               String            @id @default(uuid())
+  instagramHandle  String
+  instagramSlug    String            @unique
+  displayName      String            @default("Anon")
+  lastSubmissionAt DateTime          @default(now())
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  handles          TelegramHandle[]
+}
+
+model TelegramHandle {
+  id            String      @id @default(uuid())
+  value         String
+  slug          String      @unique
+  participant   Participant @relation(fields: [participantId], references: [id], onDelete: Cascade)
+  participantId String
+  createdAt     DateTime    @default(now())
+
+  @@index([participantId])
+}
