@@ -1,171 +1,88 @@
 <script setup lang="ts">
+import { onMounted, watch } from 'vue'
 import { storeToRefs } from 'pinia'
-import { watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { useDrivePickerStore } from '@/stores/drive-picker'
+import { useLibraryStore } from '@/stores/library'
 import { usePlayerStore } from '@/stores/player'
-import {
-  useBreadcrumbs,
-  encodeBreadcrumbPath,
-  decodeBreadcrumbPath,
-  type DriveBreadcrumb
-} from '@/composables/useBreadcrumbs'
-import { isDriveFolder, type DriveFile } from '@/services/drive.service'
-import DriveBreadcrumbs from '@/components/drive-picker/DriveBreadcrumbs.vue'
 import DrivePlayer from '@/components/drive-picker/DrivePlayer.vue'
+import CoverFlow from '@/components/music/CoverFlow.vue'
 
-const router = useRouter()
-const route = useRoute()
-
-const drivePickerStore = useDrivePickerStore()
+const libraryStore = useLibraryStore()
 const playerStore = usePlayerStore()
-const breadcrumbState = useBreadcrumbs()
 
-const { filteredFiles, searchQuery, isLoading, errorMessage } = storeToRefs(drivePickerStore)
+const { albums, selectedAlbum, selectedTracks, selectedAlbumId, isLoading, errorMessage } =
+  storeToRefs(libraryStore)
 const { currentTrack } = storeToRefs(playerStore)
-const { breadcrumbs, canGoBack } = breadcrumbState
 
-function resolveQueryValue(value: unknown) {
-  if (Array.isArray(value)) return value[0]
-  if (typeof value === 'string') return value
-  return undefined
-}
-
-async function ensureRootQuery(path?: DriveBreadcrumb[]) {
-  if (route.query.folderId || !drivePickerStore.rootFolderId) return
-  const trail =
-    path ??
-    [
-      {
-        id: drivePickerStore.rootFolderId,
-        name: drivePickerStore.rootFolderLabel
-      }
-    ]
-  await router.replace({
-    query: {
-      ...route.query,
-      folderId: drivePickerStore.rootFolderId,
-      folderName: drivePickerStore.rootFolderLabel,
-      path: encodeBreadcrumbPath(trail)
-    }
-  })
-}
+onMounted(() => {
+  void libraryStore.loadAlbums()
+})
 
 watch(
-  () => [route.query.folderId, route.query.folderName, route.query.path],
-  async ([folderIdRaw, folderNameRaw, pathRaw]) => {
-    const folderIdFromQuery = resolveQueryValue(folderIdRaw)
-    const folderNameFromQuery = resolveQueryValue(folderNameRaw)
-    const decodedPath = decodeBreadcrumbPath(resolveQueryValue(pathRaw))
-
-    if (!decodedPath.length && folderIdFromQuery === drivePickerStore.rootFolderId) {
-      decodedPath.push({
-        id: drivePickerStore.rootFolderId,
-        name: folderNameFromQuery ?? drivePickerStore.rootFolderLabel
-      })
+  () => selectedAlbumId.value,
+  async (albumId) => {
+    if (albumId) {
+      await libraryStore.loadAlbumTracks(albumId)
     }
-
-    if (!decodedPath.length) {
-      await ensureRootQuery()
-      return
-    }
-
-    const target = decodedPath[decodedPath.length - 1]
-    const effectiveFolderId = target.id || folderIdFromQuery
-    const effectiveFolderName = target.name || folderNameFromQuery || 'Folder'
-
-    if (!effectiveFolderId) {
-      await ensureRootQuery(decodedPath)
-      return
-    }
-
-    breadcrumbState.setTrail(decodedPath)
-    await drivePickerStore.loadFolder(effectiveFolderId, effectiveFolderName)
   },
-  { immediate: true }
+  { immediate: true },
 )
 
-function handleFileClick(file: DriveFile) {
-  if (isDriveFolder(file)) {
-    breadcrumbState.append({ id: file.id, name: file.name })
-    void router.push({
-      query: {
-        ...route.query,
-        folderId: file.id,
-        folderName: file.name,
-        path: encodeBreadcrumbPath(breadcrumbs.value)
-      }
-    })
-    return
-  }
-
-  playerStore.playTrack(file)
+function handleAlbumSelect(album: { id: string }) {
+  libraryStore.selectAlbum(album.id)
+  void libraryStore.loadAlbumTracks(album.id)
 }
 
-function handleGoBack() {
-  if (!canGoBack.value) return
-  const newTrail = breadcrumbState.removeLast()
-  const target = newTrail[newTrail.length - 1]
-  void router.push({
-    query: {
-      ...route.query,
-      folderId: target.id,
-      folderName: target.name,
-      path: encodeBreadcrumbPath(newTrail)
-    }
-  })
+function handleTrackClick(index: number) {
+  if (!selectedTracks.value.length) return
+  playerStore.playAlbum(selectedTracks.value, index, selectedAlbum.value ?? undefined)
+}
+
+function handleEnded() {
+  playerStore.playNext()
 }
 </script>
 
 <template>
   <main class="library-page">
     <section class="library">
-      <DrivePlayer :track="currentTrack" />
+      <DrivePlayer :track="currentTrack" @ended="handleEnded" />
+
       <section class="picker">
         <header class="picker-header">
           <div>
             <h1 class="title">Music Library</h1>
-            <p class="subtitle">Найди альбомы и треки в Google Drive</p>
+            <p class="subtitle">Локальные альбомы и треки</p>
           </div>
-          <button
-            class="back-button"
-            type="button"
-            :disabled="!canGoBack"
-            @click="handleGoBack"
-          >
-            Назад
-          </button>
         </header>
-
-        <DriveBreadcrumbs :breadcrumbs="breadcrumbs" />
-
-        <div class="picker-controls">
-          <input
-            v-model="searchQuery"
-            class="search-input"
-            placeholder="Поиск по альбомам и трекам"
-          />
-        </div>
 
         <p v-if="errorMessage" class="status error">{{ errorMessage }}</p>
         <p v-else-if="isLoading" class="status">Загрузка...</p>
-        <p v-else-if="!filteredFiles.length" class="status">Ничего не найдено</p>
+        <p v-else-if="!albums.length" class="status">Нет альбомов</p>
 
-        <ul v-else class="file-list">
-          <li
-            v-for="file in filteredFiles"
-            :key="file.id"
-          >
-            <button class="file-row" type="button" @click="handleFileClick(file)">
-              <div class="file-text">
-                <span class="file-name">{{ file.name }}</span>
-                <span class="file-meta">
-                  {{ isDriveFolder(file) ? 'Папка' : 'Трек' }}
-                </span>
+        <template v-else>
+          <CoverFlow :albums="albums" :active-id="selectedAlbumId" @select="handleAlbumSelect" />
+
+          <div class="tracks" v-if="selectedTracks.length">
+            <header class="tracks__header">
+              <div>
+                <p class="tracks__label">Альбом</p>
+                <p class="tracks__title">{{ selectedAlbum?.name }}</p>
               </div>
-            </button>
-          </li>
-        </ul>
+              <p class="tracks__meta">{{ selectedTracks.length }} трек(ов)</p>
+            </header>
+
+            <ul class="track-list">
+              <li v-for="(track, index) in selectedTracks" :key="track.id">
+                <button class="track-row" type="button" @click="handleTrackClick(index)">
+                  <div class="track-row__text">
+                    <span class="track-row__index">#{{ index + 1 }}</span>
+                    <span class="track-row__title">{{ track.title }}</span>
+                  </div>
+                </button>
+              </li>
+            </ul>
+          </div>
+        </template>
       </section>
     </section>
   </main>
@@ -200,6 +117,7 @@ function handleGoBack() {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 16px;
 }
 
 .title {
@@ -214,40 +132,6 @@ function handleGoBack() {
   color: #94a3b8;
 }
 
-.back-button {
-  padding: 8px 16px;
-  border-radius: 8px;
-  border: 1px solid rgba(148, 163, 184, 0.4);
-  background: transparent;
-  color: inherit;
-  cursor: pointer;
-  transition: border-color 0.2s, transform 0.2s;
-}
-
-.back-button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.back-button:not(:disabled):hover {
-  border-color: #4ade80;
-  transform: translateY(-1px);
-}
-
-.picker-controls {
-  display: flex;
-  gap: 12px;
-}
-
-.search-input {
-  flex: 1;
-  padding: 10px 12px;
-  border-radius: 8px;
-  border: 1px solid rgba(148, 163, 184, 0.4);
-  background: rgba(15, 23, 42, 0.4);
-  color: inherit;
-}
-
 .status {
   font-size: 14px;
   color: #cbd5f5;
@@ -257,7 +141,37 @@ function handleGoBack() {
   color: #f87171;
 }
 
-.file-list {
+.tracks {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.tracks__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.tracks__label {
+  margin: 0;
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+.tracks__title {
+  margin: 4px 0 0;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.tracks__meta {
+  margin: 0;
+  font-size: 13px;
+  color: #94a3b8;
+}
+
+.track-list {
   list-style: none;
   margin: 0;
   padding: 0;
@@ -266,40 +180,41 @@ function handleGoBack() {
   gap: 8px;
 }
 
-.file-row {
+.track-row {
   width: 100%;
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  gap: 10px;
   padding: 12px 14px;
   border-radius: 10px;
   border: 1px solid rgba(148, 163, 184, 0.25);
   background: transparent;
   color: inherit;
   cursor: pointer;
-  transition: border-color 0.2s, background 0.2s;
+  transition:
+    border-color 0.2s,
+    background 0.2s;
 }
 
-.file-row:hover {
+.track-row:hover {
   border-color: #4ade80;
   background: rgba(74, 222, 128, 0.05);
 }
 
-.file-text {
+.track-row__text {
   display: flex;
-  flex-direction: column;
-  gap: 4px;
-  align-items: flex-start;
+  align-items: center;
+  gap: 10px;
 }
 
-.file-name {
-  font-size: 16px;
-  font-weight: 500;
-}
-
-.file-meta {
+.track-row__index {
   font-size: 12px;
   color: #94a3b8;
+}
+
+.track-row__title {
+  font-size: 15px;
+  font-weight: 500;
 }
 
 @media (max-width: 768px) {

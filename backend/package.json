@@ -26,6 +26,7 @@
     "fastify-cli": "^7.4.0",
     "fastify-plugin": "^5.0.0",
     "googleapis": "^166.0.0",
+    "music-metadata": "^11.10.3",
     "pg": "^8.16.3",
     "prisma": "^6.19.0",
     "zod": "^4.1.13"

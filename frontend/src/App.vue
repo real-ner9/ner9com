@@ -1,5 +1,8 @@
 <script setup lang="ts">
 import GlobalHeader from '@/components/layout/global-header/GlobalHeader.vue'
+import { useTheme } from '@/composables/useTheme'
+
+useTheme()
 </script>
 
 <template>
@@ -11,13 +14,13 @@ import GlobalHeader from '@/components/layout/global-header/GlobalHeader.vue'
   </div>
 </template>
 
-<style scoped>
+<style scoped lang="scss">
 .app-shell {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background: #020617;
-  color: #e2e8f0;
+  background: var(--color-bg);
+  color: var(--color-text);
 }
 
 .app-shell__content {

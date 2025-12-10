@@ -1,0 +1,51 @@
+$themes: (
+  light: (
+    background: #f8fafc,
+    surface: #ffffff,
+    surface-alt: #e2e8f0,
+    text: #0b1224,
+    text-muted: #475569,
+    border: #e2e8f0,
+    accent: #22d3ee
+  ),
+  dark: (
+    background: #0b1224,
+    surface: #0f172a,
+    surface-alt: #111827,
+    text: #e2e8f0,
+    text-muted: #94a3b8,
+    border: #1e293b,
+    accent: #22d3ee
+  )
+);
+
+@mixin theme-vars($name, $map) {
+  :root[data-theme='#{$name}'] {
+    --color-bg: map-get($map, background);
+    --color-surface: map-get($map, surface);
+    --color-surface-alt: map-get($map, surface-alt);
+    --color-text: map-get($map, text);
+    --color-text-muted: map-get($map, text-muted);
+    --color-border: map-get($map, border);
+    --color-accent: map-get($map, accent);
+  }
+}
+
+:root {
+  /* default fallback until data-theme применится */
+  --color-bg: #f8fafc;
+  --color-surface: #ffffff;
+  --color-surface-alt: #e2e8f0;
+  --color-text: #0b1224;
+  --color-text-muted: #475569;
+  --color-border: #e2e8f0;
+  --color-accent: #22d3ee;
+
+  --radius-md: 12px;
+  --radius-sm: 8px;
+  --shadow-soft: 0 10px 30px rgba(0, 0, 0, 0.08);
+}
+
+@each $name, $map in $themes {
+  @include theme-vars($name, $map);
+}

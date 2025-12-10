@@ -3,7 +3,6 @@ import { computed, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vu
 import WaveSurfer from 'wavesurfer.js'
 import { storeToRefs } from 'pinia'
 import { usePlayerStore } from '@/stores/player'
-import { getAudioStreamUrl, getThumbnailUrl } from '@/services/drive.service'
 
 const playerStore = usePlayerStore()
 const { currentTrack, autoplayToken } = storeToRefs(playerStore)
@@ -16,7 +15,7 @@ const shouldAutoplayNext = ref(false)
 const currentTime = ref(0)
 const duration = ref(0)
 
-const coverUrl = computed(() => (currentTrack.value ? getThumbnailUrl(currentTrack.value.id) : ''))
+const coverUrl = computed(() => currentTrack.value?.coverUrl ?? '')
 const timeDisplay = computed(() => {
   if (!currentTrack.value || !duration.value) return '--:--'
   return `${formatTime(currentTime.value)} / ${formatTime(duration.value)}`
@@ -46,6 +45,7 @@ onMounted(() => {
   })
   waveSurferInstance.value.on('finish', () => {
     isPlaying.value = false
+    playerStore.playNext()
   })
   waveSurferInstance.value.on('timeupdate', (time: number) => {
     currentTime.value = time
@@ -77,7 +77,8 @@ watch(autoplayToken, () => {
 function loadTrack(fileId: string) {
   if (!waveSurferInstance.value || !fileId) return
   isLoadingTrack.value = true
-  const url = getAudioStreamUrl(fileId, currentTrack.value?.mimeType)
+  const url = currentTrack.value?.streamUrl ?? ''
+  if (!url) return
   waveSurferInstance.value.load(url)
 }
 
@@ -117,7 +118,7 @@ function formatTime(value: number) {
     <div class="mini-player__info">
       <p class="mini-player__label">Сейчас играет</p>
       <p class="mini-player__title">
-        {{ currentTrack?.name ?? 'Выбери трек в библиотеке' }}
+        {{ currentTrack?.title ?? 'Выбери трек в библиотеке' }}
       </p>
       <p class="mini-player__time">{{ timeDisplay }}</p>
     </div>

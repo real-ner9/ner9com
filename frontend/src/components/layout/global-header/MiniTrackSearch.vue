@@ -1,65 +1,50 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { useDebounceFn } from '@vueuse/core'
-import { searchMusicFiles, getThumbnailUrl, type DriveFile } from '@/services/drive.service'
-import { useDrivePickerStore } from '@/stores/drive-picker'
+import { useLibraryStore } from '@/stores/library'
 import { usePlayerStore } from '@/stores/player'
+import type { MusicTrack } from '@/types/music'
 
-const drivePickerStore = useDrivePickerStore()
+const libraryStore = useLibraryStore()
 const playerStore = usePlayerStore()
 
 const query = ref('')
-const results = ref<DriveFile[]>([])
+const results = ref<MusicTrack[]>([])
 const isLoading = ref(false)
 const errorMessage = ref<string | null>(null)
 const isFocused = ref(false)
 
-const dropdownVisible = computed(() => isFocused.value && (query.value.trim().length >= 2 || isLoading.value))
+const dropdownVisible = computed(
+  () => isFocused.value && (query.value.trim().length >= 2 || isLoading.value)
+)
 const hasResults = computed(() => results.value.length > 0)
 
-const abortController = ref<AbortController | null>(null)
 let blurTimeout: ReturnType<typeof setTimeout> | null = null
 
 const runSearch = useDebounceFn(async () => {
-  const folderId = drivePickerStore.rootFolderId.trim()
-  const term = query.value.trim()
-
-  if (!folderId || term.length < 2) {
+  const term = query.value.trim().toLowerCase()
+  if (term.length < 2) {
     results.value = []
     errorMessage.value = null
     isLoading.value = false
-    abortController.value?.abort()
     return
   }
-
-  abortController.value?.abort()
-  const localController = new AbortController()
-  abortController.value = localController
 
   isLoading.value = true
   errorMessage.value = null
 
   try {
-    const response = await searchMusicFiles(
-      {
-        folderId,
-        query: term,
-        pageSize: 8
-      },
-      { signal: localController.signal }
-    )
-    results.value = response.files
+    await libraryStore.ensureAllTracksLoaded()
+    results.value = libraryStore.allTracks
+      .filter((track) => track.title.toLowerCase().includes(term))
+      .slice(0, 12)
   } catch (error) {
-    if (localController.signal.aborted) return
-    results.value = []
     errorMessage.value =
       error instanceof Error ? error.message : 'Не удалось выполнить поиск'
   } finally {
-    if (!localController.signal.aborted) {
       isLoading.value = false
-    }
   }
-}, 250)
+}, 200)
 
 watch(
   () => query.value,
@@ -82,15 +67,21 @@ function handleBlur() {
   }, 150)
 }
 
-function handleSelect(track: DriveFile) {
-  playerStore.playTrack(track)
-  query.value = track.name
+function handleSelect(track: MusicTrack) {
+  const albumTracks =
+    libraryStore.selectedAlbumId === track.albumId
+      ? libraryStore.selectedTracks
+      : libraryStore.allTracks.filter((item) => item.albumId === track.albumId)
+
+  const album = libraryStore.albums.find((a) => a.id === track.albumId) ?? null
+  const index = albumTracks.findIndex((t) => t.id === track.id)
+  playerStore.playAlbum(albumTracks, Math.max(0, index), album ?? undefined)
+  query.value = track.title
   results.value = []
   isFocused.value = false
 }
 
 onBeforeUnmount(() => {
-  abortController.value?.abort()
   if (blurTimeout) {
     clearTimeout(blurTimeout)
   }
@@ -132,18 +123,11 @@ onBeforeUnmount(() => {
           :key="file.id"
         >
           <button class="mini-search__result" type="button" @mousedown.prevent @click="handleSelect(file)">
-            <img
-              v-if="file.thumbnailLink"
-              :src="getThumbnailUrl(file.id)"
-              alt=""
-              class="mini-search__cover"
-              loading="lazy"
-            />
-            <div v-else class="mini-search__cover mini-search__cover--fallback">
+            <div class="mini-search__cover mini-search__cover--fallback">
               ♪
             </div>
             <div class="mini-search__result-text">
-              <span class="mini-search__name">{{ file.name }}</span>
+              <span class="mini-search__name">{{ file.title }}</span>
               <span class="mini-search__meta">Трек</span>
             </div>
           </button>

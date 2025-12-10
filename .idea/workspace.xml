@@ -4,115 +4,12 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="86874f66-16ea-466f-835e-19c54cf5d145" name="Changes" comment="Fix flac.">
-      <change afterPath="$PROJECT_DIR$/backend/src/music/2004 - Always Outnumbered, Never Outgunned/01 Spitfire.m4a" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/music/2004 - Always Outnumbered, Never Outgunned/02 Girls.m4a" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/music/2004 - Always Outnumbered, Never Outgunned/03 Memphis Bells.m4a" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/music/2004 - Always Outnumbered, Never Outgunned/04 Get Up Get Off.m4a" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/music/2004 - Always Outnumbered, Never Outgunned/05 Hot Ride.m4a" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/music/2004 - Always Outnumbered, Never Outgunned/06 Wake Up Call.m4a" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/music/2004 - Always Outnumbered, Never Outgunned/07 Action Radar.m4a" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/music/2004 - Always Outnumbered, Never Outgunned/08 Medusa's Path.m4a" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/music/2004 - Always Outnumbered, Never Outgunned/09 Phoenix.m4a" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/music/2004 - Always Outnumbered, Never Outgunned/10 You'll Be Under My Wheels.m4a" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/music/2004 - Always Outnumbered, Never Outgunned/11 The Way It Is.m4a" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/music/2004 - Always Outnumbered, Never Outgunned/12 Shoot Down.m4a" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/music/2004 - Always Outnumbered, Never Outgunned/Icon&#10;" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/music/2004 - Always Outnumbered, Never Outgunned/cover.jpg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/music/2022 - Yung Lean - Stardust/01. Bliss (feat. FKA twigs).flac" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/music/2022 - Yung Lean - Stardust/02. Trip.flac" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/music/2022 - Yung Lean - Stardust/03. Gold.flac" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/music/2022 - Yung Lean - Stardust/04. Starz2theRainbow (feat. Thaiboy Digital).flac" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/music/2022 - Yung Lean - Stardust/05. All the things.flac" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/music/2022 - Yung Lean - Stardust/06. Lips.flac" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/music/2022 - Yung Lean - Stardust/07. Paradise Lost (feat. Antwan).flac" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/music/2022 - Yung Lean - Stardust/08. SummerTime Blood (feat. Ecco2k &amp; Bladee).flac" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/music/2022 - Yung Lean - Stardust/09. Nobody else.flac" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/music/2022 - Yung Lean - Stardust/10. Waterfall.flac" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/music/2022 - Yung Lean - Stardust/11. Letting it all go.flac" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/music/2022 - Yung Lean - Stardust/12. Visions (Outro).flac" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/music/2022 - Yung Lean - Stardust/Icon&#10;" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/music/Bangarang - EP/01 Right in.m4a" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/music/Bangarang - EP/02 Bangarang (ft. Sirah).m4a" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/music/Bangarang - EP/03 Breakn' a Sweat.m4a" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/music/Bangarang - EP/04 The Devil's Den.m4a" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/music/Bangarang - EP/05 Right on Time.m4a" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/music/Bangarang - EP/06 Kyoto (ft. Sirah).m4a" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/music/Bangarang - EP/07 Summit (ft. Ellie Goulding).m4a" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/music/Bangarang - EP/Icon&#10;" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/music/Chief Keef - Finally Rich (Complete Edition) - 2022/01 - Love Sosa.mp3" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/music/Chief Keef - Finally Rich (Complete Edition) - 2022/02 - Hallelujah.mp3" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/music/Chief Keef - Finally Rich (Complete Edition) - 2022/03 - I Don't Like.mp3" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/music/Chief Keef - Finally Rich (Complete Edition) - 2022/04 - No Tomorrow.mp3" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/music/Chief Keef - Finally Rich (Complete Edition) - 2022/05 - Hate Bein' Sober.mp3" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/music/Chief Keef - Finally Rich (Complete Edition) - 2022/06 - Kay Kay.mp3" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/music/Chief Keef - Finally Rich (Complete Edition) - 2022/07 - Laughin' To The Bank.mp3" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/music/Chief Keef - Finally Rich (Complete Edition) - 2022/08 - Diamonds.mp3" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/music/Chief Keef - Finally Rich (Complete Edition) - 2022/09 - Ballin'.mp3" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/music/Chief Keef - Finally Rich (Complete Edition) - 2022/10 - Understand Me.mp3" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/music/Chief Keef - Finally Rich (Complete Edition) - 2022/11 - 3Hunna.mp3" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/music/Chief Keef - Finally Rich (Complete Edition) - 2022/12 - Finally Rich.mp3" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/music/Chief Keef - Finally Rich (Complete Edition) - 2022/13 - Citgo.mp3" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/music/Chief Keef - Finally Rich (Complete Edition) - 2022/14 - Kobe.mp3" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/music/Chief Keef - Finally Rich (Complete Edition) - 2022/15 - Got Them Bands.mp3" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/music/Chief Keef - Finally Rich (Complete Edition) - 2022/16 - Bang Bang (Intro).mp3" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/music/Chief Keef - Finally Rich (Complete Edition) - 2022/17 - OB4L.mp3" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/music/Chief Keef - Finally Rich (Complete Edition) - 2022/18 - Rider.mp3" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/music/Chief Keef - Finally Rich (Complete Edition) - 2022/19 - Spread Da Word.mp3" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/music/Chief Keef - Finally Rich (Complete Edition) - 2022/20 - Kush With Them Beans.mp3" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/music/Chief Keef - Finally Rich (Complete Edition) - 2022/21 - It Ain't My Fault.mp3" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/music/Chief Keef - Finally Rich (Complete Edition) - 2022/22 - Squad.mp3" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/music/Chief Keef - Finally Rich (Complete Edition) - 2022/Icon&#10;" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/music/Die Lit/01 Long Time (Intro).mp3" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/music/Die Lit/02 R.I.P..mp3" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/music/Die Lit/03 Lean 4 Real.mp3" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/music/Die Lit/04 Old Money.mp3" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/music/Die Lit/05 Love Hurts.mp3" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/music/Die Lit/06 Shoota.mp3" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/music/Die Lit/07 Right Now.mp3" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/music/Die Lit/08 Poke It Out.mp3" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/music/Die Lit/09 Home (KOD).mp3" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/music/Die Lit/10 Fell In Luv.mp3" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/music/Die Lit/11 Foreign.mp3" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/music/Die Lit/12 Pull Up.mp3" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/music/Die Lit/13 Mileage.mp3" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/music/Die Lit/14 FlatBed Freestyle.mp3" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/music/Die Lit/15 No Time.mp3" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/music/Die Lit/16 Middle Of The Summer.mp3" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/music/Die Lit/17 Choppa Won't Miss.mp3" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/music/Die Lit/18 R.I.P. Fredo (Notice Me).mp3" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/music/Die Lit/19 Top.mp3" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/music/Die Lit/Icon&#10;" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/music/LYFESTYLE/01 Geek Timë.mp3" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/music/LYFESTYLE/02 Stfu.mp3" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/music/LYFESTYLE/03 They Tell Më.mp3" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/music/LYFESTYLE/04 Heard Of Më.mp3" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/music/LYFESTYLE/05 Speedball.mp3" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/music/LYFESTYLE/06 U Dont Know Lyfe.mp3" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/music/LYFESTYLE/07 Orchestratë.mp3" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/music/LYFESTYLE/08 Bë Quiet.mp3" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/music/LYFESTYLE/09 The Costës.mp3" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/music/LYFESTYLE/10 Go2work.mp3" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/music/LYFESTYLE/11 Gone 4 A Min.mp3" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/music/LYFESTYLE/12 Forever Again.mp3" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/music/LYFESTYLE/13 On 1.mp3" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/music/LYFESTYLE/14 Flytroop.mp3" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/music/LYFESTYLE/15 Eliminatë.mp3" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/music/LYFESTYLE/16 Lying 5 Fun.mp3" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/music/LYFESTYLE/17 New High.mp3" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/music/LYFESTYLE/18 So What.mp3" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/music/LYFESTYLE/19 Lyfestyle.mp3" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/music/LYFESTYLE/20 God Talkin Shhh.mp3" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/music/LYFESTYLE/21 Lyfe Party.mp3" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/music/LYFESTYLE/22 Fatë (Bonus).mp3" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/music/LYFESTYLE/Icon&#10;" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/music/Ste The Beautiful Martyr 1st Attempt/01 One In A Million.mp3" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/music/Ste The Beautiful Martyr 1st Attempt/02 Ask Jade.mp3" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/music/Ste The Beautiful Martyr 1st Attempt/03 St George The Martyr.mp3" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/music/Ste The Beautiful Martyr 1st Attempt/Icon&#10;" afterDir="false" />
+    <list default="true" id="86874f66-16ea-466f-835e-19c54cf5d145" name="Changes" comment="Add fonts.">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/routes/media-stream/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/routes/media-stream/index.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/views/HomeView.vue" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/views/HomeView.vue" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/backend/package-lock.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/backend/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/routes/media/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/routes/media/index.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/services/drive.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/services/drive.service.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -208,7 +105,7 @@
       <workItem from="1764901416439" duration="5752000" />
       <workItem from="1765044623197" duration="2356000" />
       <workItem from="1765197867380" duration="21780000" />
-      <workItem from="1765362497308" duration="2806000" />
+      <workItem from="1765362497308" duration="4744000" />
     </task>
     <task id="LOCAL-00001" summary="wip">
       <option name="closed" value="true" />
@@ -282,7 +179,15 @@
       <option name="project" value="LOCAL" />
       <updated>1765359419096</updated>
     </task>
-    <option name="localTasksCounter" value="10" />
+    <task id="LOCAL-00010" summary="Add fonts.">
+      <option name="closed" value="true" />
+      <created>1765366306382</created>
+      <option name="number" value="00010" />
+      <option name="presentableId" value="LOCAL-00010" />
+      <option name="project" value="LOCAL" />
+      <updated>1765366306382</updated>
+    </task>
+    <option name="localTasksCounter" value="11" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -316,6 +221,7 @@
     <MESSAGE value="start new project" />
     <MESSAGE value="Add hrs rating. Add db." />
     <MESSAGE value="Fix flac." />
-    <option name="LAST_COMMIT_MESSAGE" value="Fix flac." />
+    <MESSAGE value="Add fonts." />
+    <option name="LAST_COMMIT_MESSAGE" value="Add fonts." />
   </component>
 </project>

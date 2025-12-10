@@ -1,0 +1,28 @@
+@font-face {
+  font-family: 'Roboto Mono Nerd';
+  src: url('./fonts/RobotoMono/RobotoMonoNerdFont-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Roboto Mono Nerd';
+  src: url('./fonts/RobotoMono/RobotoMonoNerdFont-Medium.ttf') format('truetype');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Roboto Mono Nerd';
+  src: url('./fonts/RobotoMono/RobotoMonoNerdFont-SemiBold.ttf') format('truetype');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  --font-body: 'Roboto Mono Nerd', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+    Oxygen, Ubuntu, Cantarell, 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+}

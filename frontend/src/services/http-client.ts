@@ -36,9 +36,16 @@ export async function apiPost<TBody extends object, TResponse = unknown>(
   return handleResponse<TResponse>(response)
 }
 
-function buildUrl(path: string) {
+export function buildUrl(path: string) {
   const normalizedPath = path.startsWith('/') ? path : `/${path}`
+  if (!apiBaseUrl) return normalizedPath
   return `${apiBaseUrl}${normalizedPath}`
+}
+
+export function resolveApiUrl(pathOrUrl: string) {
+  if (!pathOrUrl) return ''
+  if (/^https?:\/\//i.test(pathOrUrl)) return pathOrUrl
+  return buildUrl(pathOrUrl)
 }
 
 async function handleResponse<TResponse>(response: Response): Promise<TResponse> {

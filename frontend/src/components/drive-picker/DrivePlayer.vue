@@ -1,30 +1,22 @@
 <script setup lang="ts">
-import { computed, watch } from 'vue'
+import { computed } from 'vue'
 import type { PropType } from 'vue'
-import type { DriveFile } from '@/services/drive.service'
-import { getAudioStreamUrl, getThumbnailUrl } from '@/services/drive.service'
+import type { MusicTrack } from '@/types/music'
 
 const props = defineProps({
   track: {
-    type: Object as PropType<DriveFile | null>,
+    type: Object as PropType<MusicTrack | null>,
     required: false,
     default: null
   }
 })
 
-const audioSrc = computed(() =>
-  props.track ? getAudioStreamUrl(props.track.id, props.track.mimeType) : ''
-)
-const thumbnailSrc = computed(() => (props.track ? getThumbnailUrl(props.track.id) : ''))
+const emit = defineEmits<{
+  (e: 'ended'): void
+}>()
 
-watch(
-  () => props.track,
-  (next, prev) => {
-    if (next && next.id !== prev?.id) {
-      console.log('Track selected for playback', next)
-    }
-  }
-)
+const audioSrc = computed(() => props.track?.streamUrl ?? '')
+const thumbnailSrc = computed(() => props.track?.coverUrl ?? '')
 </script>
 
 <template>
@@ -33,7 +25,7 @@ watch(
       <div>
         <p class="player-label">Сейчас играет</p>
         <p class="player-title">
-          {{ track?.name ?? 'Выберите трек, чтобы начать воспроизведение' }}
+          {{ track?.title ?? 'Выберите трек, чтобы начать воспроизведение' }}
         </p>
       </div>
       <img
@@ -51,10 +43,10 @@ watch(
       :src="audioSrc"
       controls
       preload="none"
+      @ended="emit('ended')"
     >
       Ваш браузер не поддерживает аудио.
-    </audio
-      v-if="audioSrc">
+    </audio>
   </section>
 </template>
 

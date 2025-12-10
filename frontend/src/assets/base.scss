@@ -1,0 +1,34 @@
+@import './fonts.scss';
+@import './theme.scss';
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  font-weight: normal;
+}
+
+body {
+  min-height: 100vh;
+  color: var(--color-text);
+  background: var(--color-bg);
+  transition: color 0.3s ease, background-color 0.3s ease;
+  line-height: 1.6;
+  font-family: var(--font-body);
+  font-size: 15px;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+a {
+  color: var(--color-accent);
+  text-decoration: none;
+  transition: background-color 0.2s ease, color 0.2s ease;
+  padding: 3px;
+}
+
+a:hover {
+  background-color: rgba(34, 211, 238, 0.16);
+}

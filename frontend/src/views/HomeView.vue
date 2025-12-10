@@ -1,11 +1,27 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
-import {
-  fetchLeaderboard,
-  submitContestEntry,
-  type LeaderboardSummary
-} from '@/services/contest.service'
 import { RouterLink } from 'vue-router'
+import { apiGet, apiPost } from '@/services/http-client'
+
+interface LeaderboardEntry {
+  participantId: string
+  displayName: string
+  handlesCount: number
+  lastSubmissionAt?: string
+}
+
+interface LeaderboardSummary {
+  totalParticipants: number
+  entries: LeaderboardEntry[]
+}
+
+interface SubmissionResponse {
+  submission: {
+    addedHandles: number
+    skippedHandles: number
+  }
+  leaderboard: LeaderboardSummary
+}
 
 const displayName = ref('')
 const instagramHandle = ref('')
@@ -25,7 +41,7 @@ async function loadLeaderboard() {
   isLeaderboardLoading.value = true
   leaderboardError.value = null
   try {
-    leaderboard.value = await fetchLeaderboard()
+    leaderboard.value = await apiGet<LeaderboardSummary>('/contest/leaderboard')
   } catch (error) {
     leaderboardError.value =
       error instanceof Error ? error.message : 'Не удалось загрузить рейтинг'
@@ -51,7 +67,10 @@ async function handleContestSubmit() {
 
   isSubmittingContest.value = true
   try {
-    const response = await submitContestEntry({
+    const response = await apiPost<
+      { displayName: string; instagramHandle: string; telegramHandles: string },
+      SubmissionResponse
+    >('/contest/submissions', {
       displayName: alias,
       instagramHandle: instagram,
       telegramHandles: handles
@@ -171,7 +190,7 @@ onMounted(() => {
     <section class="library-cta">
           <div>
         <h2>Ищешь музыку?</h2>
-        <p>Открой новую страницу «Music Library», чтобы копаться в Google Drive.</p>
+        <p>Открой «Music Library», чтобы листать локальные альбомы и треки.</p>
           </div>
       <RouterLink class="library-link" to="/music">Перейти к библиотеке</RouterLink>
     </section>
