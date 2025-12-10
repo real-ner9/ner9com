@@ -169,10 +169,10 @@ onMounted(() => {
     </section>
 
     <section class="library-cta">
-      <div>
+          <div>
         <h2>Ищешь музыку?</h2>
         <p>Открой новую страницу «Music Library», чтобы копаться в Google Drive.</p>
-      </div>
+          </div>
       <RouterLink class="library-link" to="/music">Перейти к библиотеке</RouterLink>
     </section>
   </main>

@@ -13,7 +13,7 @@ const mediaStreamRoutes: FastifyPluginAsync = async (fastify): Promise<void> => 
   fastify.get<{ Params: MediaStreamParams; Querystring: MediaStreamQuery }>(
     '/audio/:id',
     async function (request, reply) {
-      await streamAudio(request.params.id, request, reply, request.query.mimeType)
+      await streamAudio(request.params.id, request, reply)
     }
   )
 
