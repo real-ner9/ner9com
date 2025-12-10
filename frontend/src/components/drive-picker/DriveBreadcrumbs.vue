@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { PropType } from 'vue'
-import type { DriveBreadcrumb } from '@/stores/drive-picker'
+import type { DriveBreadcrumb } from '@/composables/useBreadcrumbs'
 
 defineProps({
   breadcrumbs: {

@@ -5,9 +5,9 @@ const route = useRoute()
 
 const links = [
   { path: '/', label: 'Home' },
+  { path: '/music', label: 'Music' },
   { path: '/about', label: 'AboutItems' },
   { path: '/game', label: 'Clicker Game' },
-  { path: '/dik-counter', label: 'DikCounter' }
 ]
 </script>
 

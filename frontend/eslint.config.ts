@@ -4,11 +4,14 @@ import pluginVue, { rules } from 'eslint-plugin-vue'
 import pluginVitest from '@vitest/eslint-plugin'
 import pluginPlaywright from 'eslint-plugin-playwright'
 import skipFormatting from '@vue/eslint-config-prettier/skip-formatting'
+import type { Linter } from 'eslint'
 
 // To allow more languages other than `ts` in `.vue` files, uncomment the following lines:
 // import { configureVueProject } from '@vue/eslint-config-typescript'
 // configureVueProject({ scriptLangs: ['ts', 'tsx'] })
 // More info at https://github.com/vuejs/eslint-config-typescript/#advanced-setup
+
+const vueEssentialConfig = pluginVue.configs['flat/essential'] as Linter.FlatConfig
 
 export default defineConfigWithVueTs(
   {
@@ -18,9 +21,9 @@ export default defineConfigWithVueTs(
   globalIgnores(['**/dist/**', '**/dist-ssr/**', '**/coverage/**']),
 
   {
-    ...pluginVue.configs['flat/essential'],
+    ...vueEssentialConfig,
     rules: {
-      ...pluginVue.configs['flat/essential'].rules,
+      ...(vueEssentialConfig.rules ?? {}),
       'vue/multi-word-component-names': 'off'
     }
   },

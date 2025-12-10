@@ -12,7 +12,9 @@ const props = defineProps({
   }
 })
 
-const audioSrc = computed(() => (props.track ? getAudioStreamUrl(props.track.id) : ''))
+const audioSrc = computed(() =>
+  props.track ? getAudioStreamUrl(props.track.id, props.track.mimeType) : ''
+)
 const thumbnailSrc = computed(() => (props.track ? getThumbnailUrl(props.track.id) : ''))
 
 watch(

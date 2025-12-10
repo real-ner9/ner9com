@@ -12,17 +12,12 @@ export const useDrivePickerStore = defineStore('drivePicker', () => {
   const searchQuery = ref('')
   const currentFolderId = ref('')
   const currentFolderName = ref(rootFolderLabel)
-  const selectedTrack = ref<DriveFile | null>(null)
 
   const filteredFiles = computed(() => {
     const query = searchQuery.value.trim().toLowerCase()
     if (!query) return files.value
     return files.value.filter((file) => file.name.toLowerCase().includes(query))
   })
-
-  function setSelectedTrack(track: DriveFile | null) {
-    selectedTrack.value = track
-  }
 
   async function loadFolder(folderId: string, folderName: string) {
     if (!folderId) {
@@ -39,7 +34,6 @@ export const useDrivePickerStore = defineStore('drivePicker', () => {
       currentFolderId.value = folderId
       currentFolderName.value = folderName
       searchQuery.value = ''
-      selectedTrack.value = null
     } catch (error) {
       files.value = []
       if (error instanceof Error) {
@@ -62,8 +56,6 @@ export const useDrivePickerStore = defineStore('drivePicker', () => {
     currentFolderId,
     currentFolderName,
     filteredFiles,
-    selectedTrack,
-    setSelectedTrack,
     loadFolder
   }
 })

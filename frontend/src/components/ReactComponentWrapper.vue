@@ -22,7 +22,10 @@ const renderReactTree = () => {
     return
   }
 
-  const reactElement = createElement(props.component, props.componentProps ?? {})
+  const reactElement = createElement(
+    props.component,
+    (props.componentProps as TProps | undefined) ?? undefined
+  )
   reactRoot.render(reactElement)
 }
 
