@@ -120,6 +120,15 @@ There is no music page. `components/ipod/IpodPlayer.vue` is rendered once in `Ap
 - The HR Hunt contest was removed on 2026-10-16.
 - `npm run dev` compiles to `dist/` and serves from there. After deleting a source file, delete its `dist/` counterpart too, or autoload keeps registering it.
 
+## Deploy
+
+Push to `main` deploys production (https://ner9.com) through `.github/workflows/deploy.yml`: GitHub Actions builds `backend/Dockerfile` and `frontend/Dockerfile` into `ghcr.io/real-ner9/ner9-{backend,frontend}:latest`, then calls the deploy gateway on the VPS (`/root/projects/deploy-gateway`, shared by the owner's projects), which pulls the images, updates the VPS working copy, redeploys the Dokploy apps (project "ner9": `ner9-prod-backend`, `ner9-prod-frontend`, Postgres `ner9-prod-postgres`) and rolls back if the containers don't turn healthy.
+
+- The frontend image is nginx serving the build and proxying `/api/*` to the backend with the prefix stripped (`frontend/nginx.conf.template`); `VITE_API_BASE_URL=/api` is set in the Dockerfile.
+- `backend/music` is not in any image: the backend service bind-mounts it from the VPS working copy (`/root/projects/ner9com/backend/music` → `/app/music`), which the gateway pulls on every deploy. CI checks out each app's directory without the music blobs.
+- The backend runs `prisma migrate deploy` on start. Both images have a `HEALTHCHECK`; the deploy waits on it.
+- Runtime env (`DATABASE_URL`, `BACKEND_HOST`) lives in Dokploy, not in the repo.
+
 ## Gotchas
 
 - Production runs on the owner's VPS at https://ner9.com. The local dev server is public at https://local.ner9.com (for testing from the phone, like Claw's local.claw-star.com) through the named tunnel `ner9-local`: config `frontend/cloudflared.yml`, credentials `~/.cloudflared/ner9-local.json`, DNS = proxied CNAME `local` to `3e6a5e73-38d8-4fe3-ab6f-87fab0437703.cfargotunnel.com`. `~/.cloudflared/cert.pem` is for the claw-star.com zone, so `cloudflared tunnel route dns` must not be used for ner9.com (it would create `ner9.com.claw-star.com`); edit ner9.com DNS in the dashboard.
