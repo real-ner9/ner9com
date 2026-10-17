@@ -10,6 +10,7 @@ const links = [
   { to: '/', label: 'nav.home' },
   { to: '/projects', label: 'nav.projects' },
   { to: '/resume', label: 'nav.resume' },
+  { to: '/clothes', label: 'nav.clothes' },
 ]
 </script>
 
@@ -17,7 +18,7 @@ const links = [
   <header class="header">
     <div class="container header__inner">
       <RouterLink to="/" class="header__logo">
-        {{ profile.name }}<span class="header__dot">.</span>
+        {{ profile.name }}<span class="header__dot">.</span>COM
       </RouterLink>
 
       <nav class="header__nav">

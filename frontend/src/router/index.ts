@@ -27,6 +27,12 @@ const router = createRouter({
       meta: { titleKey: 'nav.resume' },
     },
     {
+      path: '/clothes',
+      name: 'clothes',
+      component: () => import('@/pages/ClothesPage.vue'),
+      meta: { titleKey: 'nav.clothes' },
+    },
+    {
       path: '/:pathMatch(.*)*',
       name: 'not-found',
       component: () => import('@/pages/NotFoundPage.vue'),
