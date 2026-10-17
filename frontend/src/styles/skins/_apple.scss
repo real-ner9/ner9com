@@ -1,0 +1,141 @@
+// Apple 2007: iPhone OS 1 realism. Glossy blue-grey navigation bar, gel buttons with a split
+// highlight, embossed text on the settings pinstripes, a chrome logo with a floor reflection.
+// Hooks: .panel (cards), .btn, .tag, .icon-btn, header classes (see CLAUDE.md, Themes).
+
+$gloss-white: linear-gradient(180deg, #ffffff 0%, #f4f5f7 50%, #e3e6ea 51%, #f6f7f9 100%);
+
+:root[data-theme='apple'] {
+  .header {
+    border-bottom: 1px solid #2d3642;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.45),
+      0 1px 3px rgba(0, 0, 0, 0.3);
+  }
+
+  .header__logo {
+    color: #fff;
+    text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.5);
+  }
+
+  .header__dot {
+    color: #d6e4ff;
+  }
+
+  .header__link {
+    border: 1px solid transparent;
+    border-radius: 6px;
+    color: #f2f5fa;
+    text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.45);
+
+    &:hover {
+      color: #fff;
+    }
+  }
+
+  // The darker bar button of the iPhone navigation bar.
+  .header__link--active {
+    border-color: #3a4d68;
+    background: linear-gradient(180deg, #8ea2bd 0%, #6a82a3 50%, #59729a 51%, #4f6a8f 100%);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.35),
+      0 1px 0 rgba(255, 255, 255, 0.25);
+    color: #fff;
+  }
+
+  .icon-btn {
+    border-color: #4f5f75;
+    background: $gloss-white;
+    box-shadow:
+      inset 0 1px 0 #fff,
+      0 1px 1px rgba(0, 0, 0, 0.3);
+  }
+
+  // Embossed: white shadow under dark text on the pinstripes.
+  h1,
+  h2,
+  .eyebrow,
+  .hero__role,
+  .hero__summary {
+    text-shadow: 0 1px 0 rgba(255, 255, 255, 0.75);
+  }
+
+  .eyebrow {
+    color: var(--color-text-muted);
+  }
+
+  .panel {
+    border: 1px solid #abb3bc;
+    border-radius: 10px;
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.75);
+  }
+
+  .btn {
+    border: 1px solid #8a94a3;
+    border-radius: 10px;
+    background: $gloss-white;
+    box-shadow:
+      inset 0 1px 0 #fff,
+      0 1px 2px rgba(0, 0, 0, 0.25);
+    color: #2b3f66;
+    text-shadow: 0 1px 0 #fff;
+
+    &:hover {
+      border-color: #5b6b80;
+    }
+
+    &:active {
+      transform: none;
+      background: linear-gradient(180deg, #d7dce3, #eceff3);
+      box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.25);
+    }
+  }
+
+  .btn.primary {
+    border-color: #1f4f9c;
+    background: var(--button-primary);
+    box-shadow: var(--button-shadow);
+    color: #fff;
+    text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.35);
+
+    &:active {
+      filter: brightness(0.88);
+    }
+  }
+
+  .tag {
+    border: 1px solid #b9c0c9;
+    border-radius: 6px;
+    background: linear-gradient(180deg, #fdfdfe, #e6e9ee);
+    color: var(--color-text-muted);
+    text-shadow: 0 1px 0 #fff;
+  }
+
+  .chip {
+    border-color: #abb3bc;
+    background: $gloss-white;
+  }
+
+  // Resume entries as iPhone grouped-table cells: white rounded cards on the pinstripes.
+  .entry {
+    padding: 16px 18px;
+    border: 1px solid #abb3bc;
+    border-left: 1px solid #abb3bc;
+    border-radius: 10px;
+    background: #fff;
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.75);
+  }
+
+  // Chrome name standing on a glossy floor, like the product shots on apple.com in 2007.
+  .hero__name {
+    // A text-shadow would paint over the clipped chrome gradient.
+    text-shadow: none;
+    -webkit-box-reflect: below -0.1em linear-gradient(transparent 55%, rgba(255, 255, 255, 0.3));
+  }
+
+  .footer {
+    border-top-color: #abb3bc;
+    text-shadow: 0 1px 0 rgba(255, 255, 255, 0.7);
+  }
+}

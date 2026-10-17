@@ -1,0 +1,208 @@
+// FL Studio: the page floats over the Playlist (components/themes/FlPlaylist.vue). Cards are FL
+// windows with a title bar, buttons are FL's dark bevelled toolbar buttons with orange lit state,
+// tags are Channel Rack rows with a green LED, round header buttons are knobs.
+
+$fl-button: linear-gradient(180deg, #56636a 0%, #3e494f 100%);
+$fl-pressed: linear-gradient(180deg, #283136 0%, #323c41 100%);
+
+:root[data-theme='fl'] {
+  .header {
+    border-bottom: 1px solid #1d2427;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.12),
+      0 2px 10px rgba(0, 0, 0, 0.4);
+  }
+
+  .header__logo {
+    font-family: var(--font-display);
+  }
+
+  .header__link {
+    padding: 4px 10px;
+    border: 1px solid #1d2427;
+    border-radius: 2px;
+    background: $fl-button;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    color: #c3cdd2;
+    font-family: var(--font-label);
+    font-size: 12px;
+    text-transform: uppercase;
+  }
+
+  .header__link--active {
+    background: $fl-pressed;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.55);
+    color: var(--color-accent);
+    text-shadow: 0 0 8px rgba(255, 140, 26, 0.7);
+  }
+
+  // Knobs.
+  .icon-btn {
+    border: 1px solid #1d2427;
+    background: radial-gradient(circle at 50% 30%, #67747b 0%, #3f4a50 55%, #2c3438 100%);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.18),
+      0 2px 3px rgba(0, 0, 0, 0.5);
+  }
+
+  // The page is an FL window over the Playlist: a dark, see-through plate keeps text readable
+  // while the arrangement and the running playhead still show around and through it.
+  .layout__main {
+    position: relative;
+    width: calc(100% - 16px);
+    max-width: calc(var(--content-width) + 8px);
+    margin: 14px auto;
+    padding-top: 24px;
+    border: 1px solid #1d2427;
+    border-radius: 4px;
+    background: rgba(40, 50, 55, 0.8);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.45);
+
+    &::before {
+      content: attr(data-fl-title);
+      position: absolute;
+      top: 0;
+      right: 0;
+      left: 0;
+      height: 24px;
+      overflow: hidden;
+      padding: 0 64px 0 26px;
+      border-bottom: 1px solid #1d2427;
+      border-radius: 3px 3px 0 0;
+      background:
+        radial-gradient(circle at 13px 12px, #9ccc3d 0 3.5px, transparent 4.5px),
+        linear-gradient(180deg, #56636a, #3d484e);
+      color: #d6e0e5;
+      font: 600 11px/24px var(--font-label);
+      letter-spacing: 0.06em;
+      text-overflow: ellipsis;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    &::after {
+      content: '▾ ▢ ✕';
+      position: absolute;
+      top: 0;
+      right: 10px;
+      color: #9fb0b8;
+      font: 11px/24px var(--font-label);
+      letter-spacing: 0.4em;
+    }
+  }
+
+  // FL window: title bar with an orange plugin dot, the name, and window buttons on the right.
+  .panel {
+    position: relative;
+    padding-top: 36px !important;
+    border: 1px solid #1d2427;
+    border-radius: 4px;
+    background: var(--color-surface);
+    box-shadow: var(--card-shadow);
+
+    &::before {
+      content: attr(data-title);
+      position: absolute;
+      top: 0;
+      right: 0;
+      left: 0;
+      height: 22px;
+      overflow: hidden;
+      padding: 0 56px 0 24px;
+      border-bottom: 1px solid #1d2427;
+      border-radius: 3px 3px 0 0;
+      background:
+        radial-gradient(circle at 12px 11px, #ff8c1a 0 3.5px, transparent 4.5px),
+        linear-gradient(180deg, #56636a, #3d484e);
+      color: #c9d4d9;
+      font: 600 11px/22px var(--font-label);
+      letter-spacing: 0.06em;
+      text-overflow: ellipsis;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    &::after {
+      content: '▾ ✕';
+      position: absolute;
+      top: 0;
+      right: 8px;
+      color: #9fb0b8;
+      font: 11px/22px var(--font-label);
+      letter-spacing: 0.4em;
+    }
+  }
+
+  .picker__panel.panel {
+    position: absolute;
+  }
+
+  .btn {
+    padding: 9px 16px;
+    border: 1px solid #1d2427;
+    border-radius: 2px;
+    background: $fl-button;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.14),
+      0 1px 2px rgba(0, 0, 0, 0.45);
+    color: #d6e0e5;
+    font-family: var(--font-label);
+    font-size: 13px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+
+    &:hover {
+      border-color: #1d2427;
+      color: #fff;
+    }
+
+    &:active {
+      transform: none;
+      background: $fl-pressed;
+      box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.55);
+    }
+  }
+
+  .btn.primary {
+    border-color: #8a4300;
+    background: var(--button-primary);
+    box-shadow: var(--button-shadow);
+    color: var(--color-on-accent);
+  }
+
+  // Channel Rack rows: a green LED before the name.
+  .tag {
+    position: relative;
+    padding-left: 18px;
+    border: 1px solid #1d2427;
+    border-radius: 2px;
+    background: linear-gradient(180deg, #3f4a50, #323c41);
+    color: #c9d4d9;
+
+    &::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 7px;
+      width: 6px;
+      height: 6px;
+      margin-top: -3px;
+      border-radius: 50%;
+      background: #9ccc3d;
+      box-shadow: 0 0 4px #9ccc3d;
+    }
+  }
+
+  .chip {
+    border-color: #1d2427;
+    border-radius: 3px;
+    background: $fl-button;
+  }
+
+  .footer {
+    border-top-color: #1d2427;
+    background: rgba(28, 35, 39, 0.75);
+  }
+}

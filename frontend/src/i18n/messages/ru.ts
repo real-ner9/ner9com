@@ -1,0 +1,82 @@
+// Interface strings. Site copy (resume, profile, projects) lives in `content/`, per language.
+export const ru = {
+  nav: {
+    home: 'Главная',
+    projects: 'Проекты',
+    resume: 'Резюме',
+    notFound: 'Страница не найдена',
+  },
+  language: {
+    switch: 'Switch to English',
+    short: 'RU',
+  },
+  theme: {
+    title: 'Тема',
+    current: 'Тема: {name}',
+    change: 'Сменить тему',
+  },
+  dance: {
+    on: 'Позвать Fruity Dance',
+    off: 'Убрать Fruity Dance',
+    dancer: 'Танцующая FL Chan',
+  },
+  home: {
+    viewProjects: 'Смотреть проекты',
+    resume: 'Резюме',
+    music: '♪ Музыка',
+    featuredEyebrow: '01 — В продакшене',
+    featuredTitle: 'Проекты',
+    experience: 'Опыт и резюме →',
+    stack: 'Стек',
+  },
+  projects: {
+    eyebrow: 'В продакшене',
+    title: 'Проекты',
+    rest: 'Остальное — на GitHub',
+    promo: 'Промокод',
+    copy: 'Скопировать промокод',
+    copied: 'Скопировано',
+    promoHint: 'Нажми на промокод, чтобы скопировать, и введи его в боте.',
+  },
+  resume: {
+    experience: 'Опыт',
+    education: 'Образование',
+    skills: 'Навыки',
+    languages: 'Языки',
+  },
+  notFound: {
+    text: 'Такой страницы нет.',
+    home: 'На главную',
+  },
+  ipod: {
+    player: 'Музыкальный плеер',
+    collapse: 'Свернуть плеер',
+    select: 'Выбрать',
+    albums: 'Альбомы',
+    album: 'Альбом',
+    nowPlaying: 'Сейчас играет',
+    paused: 'На паузе',
+    turnOnMusic: 'Включи музыку',
+    music: 'Музыка',
+    unknownArtist: 'Неизвестный исполнитель',
+    openToPick: 'Открой, чтобы выбрать музыку',
+    play: 'Играть',
+    pause: 'Пауза',
+    playing: 'Играет',
+    loading: 'Загрузка...',
+    noAlbums: 'Нет альбомов',
+    nothingPlaying: 'Ничего не играет',
+    position: '{n} из {total}',
+    tracks: '{n} трек | {n} трека | {n} треков',
+    on: 'Вкл',
+    off: 'Выкл',
+  },
+  errors: {
+    request: 'Ошибка запроса ({status})',
+    albums: 'Не удалось загрузить альбомы',
+    tracks: 'Не удалось загрузить треки',
+    playback: 'Не удалось воспроизвести трек',
+  },
+}
+
+export type Messages = typeof ru

@@ -46,10 +46,6 @@ build/Release
 .env
 .env.*
 
-# Fastify generated config (Service Account secrets etc.)
-backend/config/*.json
 
-# Misc generated JS in examples/tests
-examples/typescript-server.js
-test/types/index.js
-
+# Browser automation artifacts
+.playwright-mcp

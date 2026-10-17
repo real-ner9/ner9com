@@ -1,0 +1,78 @@
+@use './base';
+// Per-theme chrome that tokens can't express; scoped by :root[data-theme], so it wins over the
+// helpers below and over component styles.
+@use './skins/apple';
+@use './skins/fl';
+@use './skins/win98';
+
+// Shared layout helpers used by every page.
+
+.container {
+  width: 100%;
+  max-width: var(--content-width);
+  margin: 0 auto;
+  padding: 0 var(--gutter);
+}
+
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  padding-block: 32px 48px;
+}
+
+.page-title {
+  font-size: clamp(2.25rem, 8vw, 3.5rem);
+}
+
+// Small label above a heading: "01 — Проекты".
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  color: var(--color-accent);
+  font-family: var(--font-label);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: var(--label-transform);
+
+  &::before {
+    content: '';
+    width: 18px;
+    height: 2px;
+    border-radius: 1px;
+    background: currentColor;
+  }
+}
+
+.card {
+  padding: 20px;
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: var(--card-shadow);
+}
+
+.status {
+  font-size: 14px;
+  color: var(--color-text-muted);
+}
+
+.status--error {
+  color: var(--color-danger);
+}
+
+.status--success {
+  color: var(--color-success);
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}

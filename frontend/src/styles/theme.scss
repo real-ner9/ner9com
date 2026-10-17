@@ -1,0 +1,161 @@
+@use 'sass:map';
+@use 'sass:string';
+
+// Site themes. stores/theme.ts sets data-theme on <html>; the list shown in the picker lives in
+// stores/theme.ts too. Every theme defines the full token set below, so components only ever
+// use var(--…) and look right everywhere. What tokens can't express (window chrome, bevels,
+// glossy buttons) lives in styles/skins/. The iPod and the dancers keep their own look.
+
+$helvetica: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+$segoe: 'Segoe UI', Tahoma, 'Helvetica Neue', Arial, sans-serif;
+$mono: 'Roboto Mono Nerd', ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+$tahoma: Tahoma, 'MS Sans Serif', Verdana, Geneva, sans-serif;
+// Webfonts (both with Cyrillic, registered in main.ts; only downloaded in the FL theme):
+// Exo 2 for FL's techy headings, Inter for readable FL body text on every OS (Segoe UI is
+// Windows-only).
+// unquote keeps the quotes in the output: Sass drops them when writing custom properties, and
+// an unquoted family name with a number ("Exo 2") is invalid CSS.
+$exo: string.unquote("'Exo 2 Variable'"), $segoe;
+$inter: 'Inter Variable', $segoe;
+
+// Windows 98 3D edges: raised (buttons, windows) and sunken (fields).
+$bevel-raised:
+  inset -1px -1px #0a0a0a,
+  inset 1px 1px #ffffff,
+  inset -2px -2px #808080,
+  inset 2px 2px #dfdfdf;
+
+$themes: (
+  // iPhone OS 1 / apple.com 2007: settings pinstripes, glossy navigation bar, gel buttons, chrome.
+  'apple': (
+      color-bg: #c5ccd4,
+      color-surface: #ffffff,
+      color-surface-alt: #eef1f4,
+      color-text: #1b1f24,
+      color-text-muted: #424b5e,
+      color-border: #abb3bc,
+      color-accent: #2f6fd6,
+      color-accent-soft: rgba(47, 111, 214, 0.14),
+      color-on-accent: #ffffff,
+      color-danger: #d1281f,
+      color-success: #3a9a2f,
+      font-body: $helvetica,
+      font-display: $helvetica,
+      font-label: $helvetica,
+      heading-weight: 700,
+      heading-tracking: -0.015em,
+      label-transform: none,
+      radius-sm: 6px,
+      radius-md: 10px,
+      radius-lg: 12px,
+      card-border: #abb3bc,
+      card-shadow: 0 1px 0 rgba(255, 255, 255, 0.75),
+      header-bg: linear-gradient(180deg, #b0bccd 0%, #889bb3 50%, #8195af 51%, #6d84a2 100%),
+      // Polished chrome; the skin adds a reflection under the hero name.
+      hero-gradient: linear-gradient(180deg, #8a93a3 0%, #3b414c 46%, #15181d 54%, #5d6676 100%),
+      page-pattern: repeating-linear-gradient(90deg, #c5ccd4 0 4px, #cbd2d8 4px 7px),
+      button-primary: linear-gradient(180deg, #8bbcf8 0%, #4a8ced 50%, #2a6ddc 51%, #3b80ec 100%),
+      button-shadow: (
+        inset 0 1px 0 rgba(255, 255, 255, 0.55),
+        0 1px 2px rgba(0, 0, 0, 0.35),
+      ),
+      glow: 0 1px 0 rgba(255, 255, 255, 0.8),
+      dock-bg: linear-gradient(180deg, rgba(176, 188, 205, 0.94) 0%, rgba(109, 132, 162, 0.96) 100%),
+    ),
+  // FL Studio: playlist-grey canvas, panel windows, orange accent, FL Chan green.
+  'fl': (
+      color-bg: #34424a,
+      color-surface: #2e393f,
+      color-surface-alt: #3a474e,
+      color-text: #e2eaee,
+      color-text-muted: #b2c0c7,
+      color-border: #1d2427,
+      color-accent: #ff8c1a,
+      color-accent-soft: rgba(255, 140, 26, 0.16),
+      color-on-accent: #1a1206,
+      color-danger: #ff5c5c,
+      color-success: #9ccc3d,
+      font-body: $inter,
+      font-display: $exo,
+      font-label: $mono,
+      heading-weight: 700,
+      heading-tracking: -0.02em,
+      label-transform: uppercase,
+      radius-sm: 2px,
+      radius-md: 3px,
+      radius-lg: 4px,
+      card-border: #1d2427,
+      card-shadow: 0 6px 18px rgba(0, 0, 0, 0.35),
+      header-bg: linear-gradient(180deg, #56636a 0%, #444f55 48%, #3b454b 52%, #353e43 100%),
+      hero-gradient: linear-gradient(90deg, #ffb15c 0%, #ff8c1a 45%, #9ccc3d 100%),
+      // The playlist itself is drawn by components/themes/FlPlaylist.vue.
+      page-pattern: none,
+      button-primary: linear-gradient(180deg, #ffb35c 0%, #ff8c1a 55%, #e9760a 100%),
+      button-shadow: (
+        inset 0 1px 0 rgba(255, 255, 255, 0.35),
+        0 0 14px rgba(255, 140, 26, 0.35),
+      ),
+      glow: 0 0 24px rgba(255, 140, 26, 0.35),
+      dock-bg: linear-gradient(180deg, rgba(86, 99, 106, 0.95) 0%, rgba(53, 62, 67, 0.97) 100%),
+    ),
+  // Windows 98: teal desktop, the site as a grey window, taskbar header, bevelled buttons.
+  'win98': (
+      color-bg: #008080,
+      color-surface: #c0c0c0,
+      color-surface-alt: #ffffff,
+      color-text: #000000,
+      color-text-muted: #3c3c3c,
+      color-border: #808080,
+      color-accent: #000080,
+      color-accent-soft: rgba(0, 0, 128, 0.12),
+      color-on-accent: #ffffff,
+      color-danger: #c00000,
+      color-success: #008000,
+      font-body: $tahoma,
+      font-display: $tahoma,
+      font-label: $tahoma,
+      heading-weight: 700,
+      heading-tracking: 0,
+      label-transform: none,
+      radius-sm: 0,
+      radius-md: 0,
+      radius-lg: 0,
+      card-border: transparent,
+      card-shadow: $bevel-raised,
+      header-bg: #c0c0c0,
+      // WordArt-ish: title-bar blue with a hard drop shadow (via glow).
+      hero-gradient: linear-gradient(180deg, #1084d0 0%, #000080 100%),
+      // Desktop pattern: a faint grid on the teal.
+      page-pattern: (
+        linear-gradient(rgba(0, 0, 0, 0.07) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 0, 0, 0.07) 1px, transparent 1px),
+      ),
+      button-primary: #c0c0c0,
+      button-shadow: $bevel-raised,
+      glow: 3px 3px 0 rgba(0, 0, 0, 0.35),
+      dock-bg: #c0c0c0,
+    )
+);
+
+@mixin theme($name) {
+  @each $key, $value in map.get($themes, $name) {
+    --#{$key}: #{$value};
+  }
+}
+
+:root {
+  @include theme(apple);
+
+  --content-width: 1100px;
+  --gutter: 20px;
+}
+
+@each $name, $tokens in $themes {
+  :root[data-theme='#{$name}'] {
+    @include theme($name);
+  }
+}
+
+:root[data-theme='win98'] body {
+  background-size: 16px 16px;
+}

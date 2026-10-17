@@ -1,0 +1,278 @@
+// Windows 98: teal desktop, the header is the taskbar (Start button logo, tray on the right),
+// the page is an Internet Explorer window, cards are windows with a blue title bar, buttons and
+// fields have the classic 3D bevels, even the scrollbars.
+
+$raised:
+  inset -1px -1px #0a0a0a,
+  inset 1px 1px #ffffff,
+  inset -2px -2px #808080,
+  inset 2px 2px #dfdfdf;
+$sunken:
+  inset -1px -1px #ffffff,
+  inset 1px 1px #0a0a0a,
+  inset -2px -2px #dfdfdf,
+  inset 2px 2px #808080;
+$field: inset -1px -1px #ffffff, inset 1px 1px #808080;
+$title-bar: linear-gradient(90deg, #000080, #1084d0);
+// The 50% dither of a pressed taskbar button and of the scrollbar track.
+$dither: repeating-conic-gradient(#c0c0c0 0 25%, #ffffff 0 50%) 0 0 / 2px 2px;
+
+// Small grey caption button with a glyph, drawn on a ::after.
+@mixin caption-button($glyph) {
+  content: $glyph;
+  position: absolute;
+  top: 6px;
+  right: 7px;
+  width: 16px;
+  height: 14px;
+  background: #c0c0c0;
+  box-shadow: $raised;
+  color: #000;
+  font: 700 9px/14px var(--font-body);
+  text-align: center;
+}
+
+@mixin title-bar {
+  content: attr(data-title);
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  left: 3px;
+  height: 20px;
+  overflow: hidden;
+  padding: 0 28px 0 6px;
+  background: $title-bar;
+  color: #fff;
+  font: 700 13px/20px var(--font-body);
+  letter-spacing: 0;
+  text-overflow: ellipsis;
+  text-transform: none;
+  white-space: nowrap;
+}
+
+:root[data-theme='win98'] {
+  ::selection {
+    background: #000080;
+    color: #fff;
+  }
+
+  // Taskbar.
+  .header {
+    border-bottom: none;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    box-shadow:
+      inset 0 1px #dfdfdf,
+      inset 0 2px #fff,
+      0 1px 0 #808080,
+      0 2px 0 #0a0a0a;
+  }
+
+  // Start button.
+  .header__logo {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 10px 3px 6px;
+    background: #c0c0c0;
+    box-shadow: $raised;
+    color: #000;
+    font-family: var(--font-body);
+    font-size: 15px;
+    letter-spacing: 0;
+
+    &::before {
+      content: '';
+      width: 16px;
+      height: 14px;
+      background:
+        linear-gradient(90deg, #f03a17 0 48%, transparent 48% 52%, #7fba00 52%) top / 100% 46%
+          no-repeat,
+        linear-gradient(90deg, #0078d7 0 48%, transparent 48% 52%, #ffb900 52%) bottom / 100% 46%
+          no-repeat;
+      transform: perspective(40px) rotateY(-12deg);
+    }
+
+    &:active {
+      box-shadow: $sunken;
+    }
+
+    // On phones the header makes the logo flex: 1; a Start button stays its own size.
+    @media (max-width: 640px) {
+      flex: 0 0 auto;
+      margin-right: auto;
+    }
+  }
+
+  .header__dot {
+    display: none;
+  }
+
+  .header__link {
+    padding: 4px 12px;
+    border-radius: 0;
+    background: #c0c0c0;
+    box-shadow: $raised;
+    color: #000;
+    font-size: 13px;
+
+    &:hover {
+      color: #000;
+    }
+  }
+
+  .header__link--active {
+    background: $dither;
+    box-shadow: $sunken;
+    font-weight: 700;
+  }
+
+  // System tray.
+  .header__actions {
+    padding: 3px 5px;
+    box-shadow: $field;
+  }
+
+  .icon-btn {
+    width: 30px;
+    height: 30px;
+    border: none;
+    border-radius: 0;
+    background: #c0c0c0;
+    box-shadow: $raised;
+    color: #000;
+
+    &:active,
+    &[aria-expanded='true'],
+    &.dance--on {
+      box-shadow: $sunken;
+    }
+  }
+
+  // The page itself is an Internet Explorer window on the desktop.
+  .layout__main {
+    position: relative;
+    width: calc(100% - 16px);
+    max-width: calc(var(--content-width) + 8px);
+    margin: 16px auto;
+    padding: 26px 4px 4px;
+    background: #c0c0c0;
+    box-shadow: $raised;
+
+    &::before {
+      @include title-bar;
+    }
+
+    &::after {
+      @include caption-button('✕');
+    }
+
+    > * {
+      min-height: 60vh;
+      background: #fff;
+      box-shadow: $sunken;
+    }
+  }
+
+  .footer {
+    border-top: none;
+    color: #e6f4f4;
+    text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.4);
+
+    a {
+      color: #fff;
+      text-decoration: underline;
+    }
+  }
+
+  .panel {
+    position: relative;
+    padding-top: 34px !important;
+    border: none;
+    border-radius: 0;
+    background: #c0c0c0;
+    box-shadow: $raised;
+
+    &::before {
+      @include title-bar;
+    }
+
+    &::after {
+      @include caption-button('✕');
+    }
+  }
+
+  .picker__panel.panel {
+    position: absolute;
+  }
+
+  .btn {
+    padding: 7px 18px;
+    border: none;
+    border-radius: 0;
+    background: #c0c0c0;
+    box-shadow: $raised;
+    color: #000;
+    font-weight: 400;
+
+    &:hover {
+      border: none;
+    }
+
+    &:active {
+      transform: translate(1px, 1px);
+      box-shadow: $sunken;
+    }
+
+    &:focus-visible {
+      outline: 1px dotted #000;
+      outline-offset: -5px;
+    }
+  }
+
+  // The default button of a dialog: an extra black frame.
+  .btn.primary {
+    outline: 1px solid #000;
+    background: #c0c0c0;
+    box-shadow: $raised;
+    color: #000;
+    font-weight: 700;
+    filter: none;
+  }
+
+  .tag {
+    border-radius: 0;
+    background: #fff;
+    box-shadow: $field;
+    color: #000;
+  }
+
+  .showcase__status {
+    border-radius: 0;
+  }
+
+  .chip {
+    border: none;
+    border-radius: 0;
+    background: #c0c0c0;
+    box-shadow: $raised;
+  }
+
+  .eyebrow::before {
+    border-radius: 0;
+  }
+
+  // Bevelled scrollbars.
+  &::-webkit-scrollbar,
+  ::-webkit-scrollbar {
+    width: 16px;
+    height: 16px;
+    background: $dither;
+  }
+
+  &::-webkit-scrollbar-thumb,
+  ::-webkit-scrollbar-thumb {
+    background: #c0c0c0;
+    box-shadow: $raised;
+  }
+}

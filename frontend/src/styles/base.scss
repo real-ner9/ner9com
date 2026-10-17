@@ -1,0 +1,67 @@
+@use './fonts';
+@use './theme';
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+}
+
+// Always reserve the scrollbar's space, so the page window keeps the same width and position on
+// short pages (no scrollbar) and long ones.
+html {
+  scrollbar-gutter: stable;
+}
+
+body {
+  min-height: 100vh;
+  color: var(--color-text);
+  background-color: var(--color-bg);
+  background-image: var(--page-pattern);
+  background-attachment: fixed;
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.6;
+  transition:
+    color 0.3s ease,
+    background-color 0.3s ease;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+a {
+  color: var(--color-accent);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+  color: inherit;
+}
+
+img {
+  display: block;
+  max-width: 100%;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
+  font-weight: var(--heading-weight);
+  letter-spacing: var(--heading-tracking);
+  line-height: 1.1;
+}
+
+::selection {
+  background: var(--color-accent);
+  color: var(--color-on-accent);
+}

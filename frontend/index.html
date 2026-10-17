@@ -1,12 +1,162 @@
 <!DOCTYPE html>
-<html lang="">
+<html lang="ru">
   <head>
-    <meta charset="UTF-8">
-    <link rel="icon" href="/favicon.ico">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vite App</title>
+    <meta charset="UTF-8" />
+    <link rel="icon" href="/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="description" content="NER9: проекты, резюме и музыка" />
+    <title>NER9</title>
+    <script>
+      // Apply the saved theme before the first paint (same logic as stores/theme.ts), so the
+      // splash and the page never flash in the wrong colours.
+      ;(function () {
+        var themes = ['apple', 'fl', 'win98']
+        var saved = null
+        try {
+          saved = localStorage.getItem('ner9-theme')
+        } catch (e) {}
+        if (themes.indexOf(saved) < 0) saved = 'apple'
+        document.documentElement.dataset.theme = saved
+      })()
+    </script>
+    <style>
+      /* Splash shown until the app mounts (removed in main.ts). Colours per theme mirror
+         styles/theme.scss: page background and the hero gradient. */
+      #splash {
+        --s-bg: #c5ccd4;
+        --s-1: #15181d;
+        --s-2: #5d6676;
+        --s-3: #2f6fd6;
+        --s-font: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+        position: fixed;
+        inset: 0;
+        z-index: 1000;
+        display: grid;
+        place-items: center;
+        background: var(--s-bg);
+        transition:
+          opacity 0.45s ease,
+          visibility 0.45s;
+      }
+      [data-theme='fl'] #splash {
+        --s-bg: #34424a;
+        --s-1: #ffb15c;
+        --s-2: #ff8c1a;
+        --s-3: #9ccc3d;
+        --s-font: ui-monospace, 'Cascadia Mono', Menlo, Consolas, monospace;
+      }
+      [data-theme='win98'] #splash {
+        --s-bg: #008080;
+        --s-1: #000080;
+        --s-2: #1084d0;
+        --s-3: #ffffff;
+        --s-font: Tahoma, 'MS Sans Serif', Verdana, sans-serif;
+      }
+      #splash.splash--out {
+        opacity: 0;
+        visibility: hidden;
+      }
+      .splash__logo {
+        display: flex;
+        margin: 0;
+        font-family: var(--s-font);
+        font-size: clamp(64px, 22vw, 168px);
+        font-weight: 800;
+        line-height: 1;
+        letter-spacing: -0.05em;
+        transition: transform 0.45s ease;
+      }
+      .splash--out .splash__logo {
+        transform: scale(1.08);
+      }
+      /* Each letter rises in, then a band of the theme's colours sweeps through all of them. */
+      .splash__logo span {
+        padding: 0 0.02em;
+        background: linear-gradient(
+            100deg,
+            var(--s-1) 0%,
+            var(--s-2) 30%,
+            var(--s-3) 50%,
+            var(--s-2) 70%,
+            var(--s-1) 100%
+          )
+          0 0 / 300% 100%;
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+        filter: drop-shadow(0 0 18px color-mix(in srgb, var(--s-3) 35%, transparent));
+        opacity: 0;
+        animation:
+          splash-in 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards,
+          splash-shine 2.4s linear infinite;
+      }
+      .splash__logo span:nth-child(2) {
+        animation-delay: 0.07s, -0.15s;
+      }
+      .splash__logo span:nth-child(3) {
+        animation-delay: 0.14s, -0.3s;
+      }
+      .splash__logo span:nth-child(4) {
+        animation-delay: 0.21s, -0.45s;
+      }
+      .splash__bar {
+        position: absolute;
+        bottom: 22%;
+        left: 50%;
+        width: 120px;
+        height: 3px;
+        margin-left: -60px;
+        overflow: hidden;
+        border-radius: 3px;
+        background: color-mix(in srgb, var(--s-2) 20%, transparent);
+      }
+      .splash__bar::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        width: 40%;
+        border-radius: inherit;
+        background: linear-gradient(90deg, var(--s-2), var(--s-3));
+        animation: splash-bar 1.1s ease-in-out infinite;
+      }
+      @keyframes splash-in {
+        from {
+          opacity: 0;
+          transform: translateY(0.25em);
+        }
+        to {
+          opacity: 1;
+          transform: none;
+        }
+      }
+      /* One full gradient period (the image is 3x the letter: offset = -2w * -150% = 3w). */
+      @keyframes splash-shine {
+        to {
+          background-position-x: -150%;
+        }
+      }
+      @keyframes splash-bar {
+        from {
+          transform: translateX(-100%);
+        }
+        to {
+          transform: translateX(250%);
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .splash__logo span,
+        .splash__bar::after {
+          animation: none;
+          opacity: 1;
+        }
+      }
+    </style>
   </head>
   <body>
+    <div id="splash" aria-hidden="true">
+      <p class="splash__logo"><span>N</span><span>E</span><span>R</span><span>9</span></p>
+      <div class="splash__bar"></div>
+    </div>
     <div id="app"></div>
     <script type="module" src="/src/main.ts"></script>
   </body>

@@ -1,3 +1,5 @@
+// Database schema. No models yet; the database stays wired up (plugins/prisma.ts decorates
+// fastify.prisma) for features that need storage.
 generator client {
   provider = "prisma-client-js"
 }
@@ -5,26 +7,4 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
-}
-
-model Participant {
-  id               String            @id @default(uuid())
-  instagramHandle  String
-  instagramSlug    String            @unique
-  displayName      String            @default("Anon")
-  lastSubmissionAt DateTime          @default(now())
-  createdAt        DateTime          @default(now())
-  updatedAt        DateTime          @updatedAt
-  handles          TelegramHandle[]
-}
-
-model TelegramHandle {
-  id            String      @id @default(uuid())
-  value         String
-  slug          String      @unique
-  participant   Participant @relation(fields: [participantId], references: [id], onDelete: Cascade)
-  participantId String
-  createdAt     DateTime    @default(now())
-
-  @@index([participantId])
 }

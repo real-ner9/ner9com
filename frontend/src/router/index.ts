@@ -1,38 +1,51 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import HomeView from '@/views/HomeView.vue'
-import AboutView from '@/views/AboutView.vue'
-import MusicLibraryView from '@/views/MusicLibraryView.vue'
+import HomePage from '@/pages/HomePage.vue'
 
+declare module 'vue-router' {
+  interface RouteMeta {
+    /** i18n key of the page title (tab title, Windows 98 window title); the site name is appended. */
+    titleKey?: string
+  }
+}
+
+// Pages other than home are lazy-loaded into their own chunks.
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
+  scrollBehavior: (_to, _from, saved) => saved ?? { top: 0 },
   routes: [
+    { path: '/', name: 'home', component: HomePage },
     {
-      path: '/',
-      name: 'home',
-      component: HomeView,
+      path: '/projects',
+      name: 'projects',
+      component: () => import('@/pages/ProjectsPage.vue'),
+      meta: { titleKey: 'nav.projects' },
     },
     {
-      path: '/about',
-      name: 'about',
-      // route level code-splitting
-      // this generates a separate chunk (AboutItems.[hash].js) for this route
-      // which is lazy-loaded when the route is visited.
-      component: AboutView,
+      path: '/resume',
+      name: 'resume',
+      component: () => import('@/pages/ResumePage.vue'),
+      meta: { titleKey: 'nav.resume' },
     },
     {
-      path: '/game',
-      name: 'game',
-      // route level code-splitting
-      // this generates a separate chunk (AboutItems.[hash].js) for this route
-      // which is lazy-loaded when the route is visited.
-      component: () => import('../views/GameView.vue'),
-    },
-    {
-      path: '/music',
-      name: 'music',
-      component: MusicLibraryView,
+      path: '/:pathMatch(.*)*',
+      name: 'not-found',
+      component: () => import('@/pages/NotFoundPage.vue'),
+      meta: { titleKey: 'nav.notFound' },
     },
   ],
+})
+
+// Lazy pages are fetched in the background once the first page is shown, so navigating later
+// doesn't wait on the network.
+void router.isReady().then(() => {
+  const prefetch = () => {
+    for (const route of router.getRoutes()) {
+      const component = route.components?.default
+      if (typeof component === 'function') void (component as () => Promise<unknown>)()
+    }
+  }
+  if ('requestIdleCallback' in window) window.requestIdleCallback(prefetch)
+  else setTimeout(prefetch, 2000)
 })
 
 export default router

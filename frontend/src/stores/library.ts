@@ -1,98 +1,58 @@
-import { computed, ref } from 'vue'
+import { t } from '@/i18n'
+import { ref } from 'vue'
 import { defineStore } from 'pinia'
-import { apiGet, resolveApiUrl } from '@/services/http-client'
+import { fetchAlbumTracks, fetchAlbums } from '@/api/library'
 import type { MusicAlbum, MusicTrack } from '@/types/music'
 
+/** Albums and their tracks, loaded lazily from the backend and cached for the session. */
 export const useLibraryStore = defineStore('library', () => {
   const albums = ref<MusicAlbum[]>([])
   const tracksByAlbum = ref<Record<string, MusicTrack[]>>({})
-  const selectedAlbumId = ref<string>('')
   const isLoading = ref(false)
-  const isReady = ref(false)
   const errorMessage = ref<string | null>(null)
-  const isHydratedAllTracks = ref(false)
 
-  const selectedAlbum = computed(() =>
-    albums.value.find((item) => item.id === selectedAlbumId.value) ?? null
-  )
+  let albumsRequest: Promise<void> | null = null
+  const trackRequests = new Map<string, Promise<MusicTrack[]>>()
 
-  const selectedTracks = computed(() => tracksByAlbum.value[selectedAlbumId.value] ?? [])
-
-  const allTracks = computed(() =>
-    Object.values(tracksByAlbum.value)
-      .flat()
-      .sort((a, b) => a.title.localeCompare(b.title, undefined, { numeric: true }))
-  )
-
-  async function loadAlbums() {
-    isLoading.value = true
-    errorMessage.value = null
-    try {
-      const response = await apiGet<{ albums: MusicAlbum[] }>('/library/albums')
-      albums.value = response.albums.map((album) => ({
-        ...album,
-        coverUrl: album.coverUrl ? resolveApiUrl(album.coverUrl) : null
-      }))
-      if (!selectedAlbumId.value && albums.value.length) {
-        selectedAlbumId.value = albums.value[0].id
+  /** Safe to call repeatedly: concurrent and later calls reuse the first request. */
+  function loadAlbums() {
+    albumsRequest ??= (async () => {
+      isLoading.value = true
+      errorMessage.value = null
+      try {
+        albums.value = await fetchAlbums()
+      } catch (error) {
+        errorMessage.value = error instanceof Error ? error.message : t('errors.albums')
+        albumsRequest = null
+      } finally {
+        isLoading.value = false
       }
-      isReady.value = true
-    } catch (error) {
-      errorMessage.value = error instanceof Error ? error.message : 'Не удалось загрузить альбомы'
-    } finally {
-      isLoading.value = false
+    })()
+    return albumsRequest
+  }
+
+  function loadTracks(albumId: string): Promise<MusicTrack[]> {
+    const cached = tracksByAlbum.value[albumId]
+    if (cached) return Promise.resolve(cached)
+
+    let request = trackRequests.get(albumId)
+    if (!request) {
+      request = fetchAlbumTracks(albumId)
+        .then((tracks) => {
+          tracksByAlbum.value = { ...tracksByAlbum.value, [albumId]: tracks }
+          return tracks
+        })
+        .catch((error) => {
+          trackRequests.delete(albumId)
+          errorMessage.value = error instanceof Error ? error.message : t('errors.tracks')
+          return []
+        })
+      trackRequests.set(albumId, request)
     }
+    return request
   }
 
-  async function loadAlbumTracks(albumId: string) {
-    if (!albumId) return
-    if (tracksByAlbum.value[albumId]) return
+  const albumById = (albumId: string) => albums.value.find((album) => album.id === albumId) ?? null
 
-    try {
-      const { tracks } = await apiGet<{ album: MusicAlbum; tracks: MusicTrack[] }>(
-        `/library/albums/${encodeURIComponent(albumId)}/tracks`
-      )
-      const normalized = tracks.map((track) => ({
-        ...track,
-        streamUrl: resolveApiUrl(track.streamUrl),
-        coverUrl: track.coverUrl ? resolveApiUrl(track.coverUrl) : null
-      }))
-      tracksByAlbum.value = {
-        ...tracksByAlbum.value,
-        [albumId]: normalized
-      }
-    } catch (error) {
-      errorMessage.value =
-        error instanceof Error ? error.message : 'Не удалось загрузить треки альбома'
-    }
-  }
-
-  async function ensureAllTracksLoaded() {
-    if (isHydratedAllTracks.value) return
-    if (!albums.value.length) {
-      await loadAlbums()
-    }
-    const tasks = albums.value.map((album) => loadAlbumTracks(album.id))
-    await Promise.all(tasks)
-    isHydratedAllTracks.value = true
-  }
-
-  function selectAlbum(albumId: string) {
-    selectedAlbumId.value = albumId
-  }
-
-  return {
-    albums,
-    selectedAlbum,
-    selectedTracks,
-    allTracks,
-    selectedAlbumId,
-    isLoading,
-    isReady,
-    errorMessage,
-    loadAlbums,
-    loadAlbumTracks,
-    ensureAllTracksLoaded,
-    selectAlbum
-  }
+  return { albums, tracksByAlbum, isLoading, errorMessage, loadAlbums, loadTracks, albumById }
 })

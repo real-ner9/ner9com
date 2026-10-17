@@ -1,0 +1,22 @@
+// Subsets of Roboto Mono Nerd Font (Latin, Cyrillic, common symbols) as woff2: ~18 KB each
+// instead of 2.4 MB TTFs. Regenerate with fonttools' pyftsubset if new glyphs are needed.
+@font-face {
+  font-family: 'Roboto Mono Nerd';
+  src: url('@/assets/fonts/RobotoMono/RobotoMono-Regular.subset.woff2') format('woff2');
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Roboto Mono Nerd';
+  src: url('@/assets/fonts/RobotoMono/RobotoMono-Medium.subset.woff2') format('woff2');
+  font-weight: 500;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Roboto Mono Nerd';
+  src: url('@/assets/fonts/RobotoMono/RobotoMono-SemiBold.subset.woff2') format('woff2');
+  font-weight: 600;
+  font-display: swap;
+}
