@@ -9,6 +9,12 @@ import {
 } from '../../services/local-music.service'
 
 type IdParams = { Params: { id: string } }
+type FileQuery = { Querystring: { v?: string; size?: string } }
+
+// URLs carry the file's version (?v=), so a versioned response never changes and browsers and
+// Cloudflare may keep it for a year; unversioned (old) URLs get a short lifetime.
+const cacheControl = (v?: string) =>
+  v ? 'public, max-age=31536000, immutable' : 'public, max-age=3600'
 
 const libraryRoutes: FastifyPluginAsync = async (fastify): Promise<void> => {
   // Reading the tags of a few thousand files takes a while: do it at startup, not on the first
@@ -24,7 +30,11 @@ const libraryRoutes: FastifyPluginAsync = async (fastify): Promise<void> => {
 
   fastify.get('/albums', async () => ({ albums: await listAlbums() }))
 
-  fastify.get('/tracks', async () => ({ tracks: await getAllTracks() }))
+  // The whole library for Songs and Artists. Lean: clients rebuild streamUrl from id and v and
+  // take the cover from the album, which roughly halves the response.
+  fastify.get('/tracks', async () => ({
+    tracks: (await getAllTracks()).map(({ streamUrl: _s, coverUrl: _c, ...track }) => track)
+  }))
 
   fastify.get<IdParams>('/albums/:id/tracks', async (request, reply) => {
     try {
@@ -35,23 +45,30 @@ const libraryRoutes: FastifyPluginAsync = async (fastify): Promise<void> => {
     }
   })
 
-  fastify.get<IdParams>('/cover/:id', async (request, reply) => {
-    const cover = await getCover(request.params.id).catch(() => null)
+  // ?size=small is the 160 px thumbnail for lists and the mini player.
+  fastify.get<IdParams & FileQuery>('/cover/:id', async (request, reply) => {
+    const { v, size } = request.query
+    const cover = await getCover(request.params.id, size === 'small' ? 'small' : 'large', v).catch(
+      () => null
+    )
     if (!cover) return reply.notFound('Обложка не найдена')
 
     return reply
       .header('Content-Type', cover.mime)
-      .header('Cache-Control', 'public, max-age=86400')
+      .header('Cache-Control', cacheControl(v))
       .send(cover.buffer)
   })
 
-  fastify.get<IdParams>('/stream/:id', async (request, reply) => {
+  fastify.get<IdParams & FileQuery>('/stream/:id', async (request, reply) => {
     try {
       const { statusCode, headers, stream } = await getTrackStream(
         request.params.id,
         request.headers.range
       )
-      return reply.code(statusCode).headers(headers).send(stream)
+      return reply
+        .code(statusCode)
+        .headers({ ...headers, 'Cache-Control': cacheControl(request.query.v) })
+        .send(stream)
     } catch (error) {
       if (error instanceof RangeNotSatisfiableError) {
         return reply

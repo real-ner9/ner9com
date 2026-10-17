@@ -53,6 +53,8 @@ export interface LocalTrack {
   readonly streamUrl: string
   readonly coverUrl: string | null
   readonly trackIndex: number
+  /** File version, also in streamUrl. */
+  readonly v: string
   /** With the codec where it matters, e.g. `audio/mp4; codecs="alac"`, for canPlayType(). */
   readonly mimeType: string
 }
@@ -67,6 +69,8 @@ interface TrackTags {
   artist: string | null
   duration: number | null
   mimeType: string
+  /** Changes when the file does; appended to the stream URL so it can be cached for good. */
+  v: string
 }
 
 export interface StreamResult {
@@ -85,8 +89,20 @@ const thumbnailCache = new Map<string, Cover>()
 const tagCache = new Map<string, TrackTags>()
 const artistCache = new Map<string, string | null>()
 
-/** Covers are served as square webp thumbnails: originals can be several hundred KB. */
-const COVER_SIZE = 600
+/**
+ * Covers are served as square webp thumbnails: originals can be several hundred KB. The library
+ * build writes them as thumb-600.webp / thumb-160.webp; sharp makes them only for albums without.
+ */
+export type CoverSize = 'large' | 'small'
+const COVER_PX: Record<CoverSize, number> = { large: 600, small: 160 }
+
+/** The album list and track lists are rebuilt in the background when older than this. */
+const SNAPSHOT_TTL_MS = 60_000
+
+/** Short hash of a file's size and mtime, used as the `?v=` of its URL. */
+function versionOf({ size, mtimeMs }: { size: number; mtimeMs: number }) {
+  return createHash('sha1').update(`${size}:${mtimeMs}`).digest('base64url').slice(0, 8)
+}
 
 /** id -> absolute path of every album folder and track file seen so far. */
 const pathsById = new Map<string, string>()
@@ -116,7 +132,8 @@ async function indexLibrary() {
 }
 
 const isAudio = (name: string) => extname(name).toLowerCase() in AUDIO_MIME
-const isCover = (name: string) => extname(name).toLowerCase() in COVER_MIME
+const isThumbnail = (name: string) => name.startsWith('thumb-')
+const isCover = (name: string) => extname(name).toLowerCase() in COVER_MIME && !isThumbnail(name)
 
 /** Audio files of an album in track order. Zero-byte files (broken commits) are skipped. */
 async function listTrackFiles(albumPath: string) {
@@ -135,8 +152,8 @@ function titleFromFileName(fileName: string) {
 async function readTags(trackPath: string): Promise<TrackTags> {
   // Keyed by size and mtime too: a file replaced under the same name (re-encoded, re-uploaded)
   // gets its tags read again.
-  const { size, mtimeMs } = await fs.stat(trackPath)
-  const key = `${trackPath}:${size}:${mtimeMs}`
+  const stat = await fs.stat(trackPath)
+  const key = `${trackPath}:${stat.size}:${stat.mtimeMs}`
   const cached = tagCache.get(key)
   if (cached) return cached
 
@@ -146,6 +163,7 @@ async function readTags(trackPath: string): Promise<TrackTags> {
     artist: null,
     duration: null,
     mimeType: baseMime,
+    v: versionOf(stat),
   }
   try {
     const { common, format } = await parseFile(trackPath, { duration: false, skipCovers: true })
@@ -154,6 +172,7 @@ async function readTags(trackPath: string): Promise<TrackTags> {
       artist: common.artist?.trim() || null,
       duration: format.duration ? Math.round(format.duration) : null,
       mimeType: mimeWithCodec(baseMime, format.codec),
+      v: tags.v,
     }
   } catch {
     // Unreadable tags are not fatal: fall back to the file name.
@@ -186,7 +205,8 @@ async function findCover(albumPath: string): Promise<CoverSource | null> {
   if (coverSourceCache.has(albumPath)) return coverSourceCache.get(albumPath) ?? null
 
   let source: CoverSource | null = null
-  const coverFile = (await fs.readdir(albumPath)).find(isCover)
+  const images = (await fs.readdir(albumPath)).filter(isCover)
+  const coverFile = images.find((name) => name.startsWith('cover.')) ?? images[0]
   if (coverFile) {
     source = { file: join(albumPath, coverFile) }
   } else {
@@ -231,40 +251,13 @@ async function albumArtist(albumPath: string) {
 }
 
 async function coverUrlFor(albumId: string, albumPath: string) {
-  return (await findCover(albumPath)) ? `/library/cover/${albumId}` : null
+  const source = await findCover(albumPath)
+  if (!source) return null
+  const v = versionOf(await fs.stat('file' in source ? source.file : source.track))
+  return `/library/cover/${albumId}?v=${v}`
 }
 
-export async function listAlbums(): Promise<LocalAlbum[]> {
-  const entries = await fs.readdir(MUSIC_ROOT, { withFileTypes: true })
-  const dirs = entries
-    .filter((entry) => entry.isDirectory())
-    .sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }))
-
-  const albums = await Promise.all(
-    dirs.map(async (dir) => {
-      const albumPath = join(MUSIC_ROOT, dir.name)
-      const id = toId(albumPath)
-      const files = await listTrackFiles(albumPath)
-      const formats: Record<string, number> = {}
-      for (const file of files) {
-        const { mimeType } = await readTags(join(albumPath, file))
-        formats[mimeType] = (formats[mimeType] ?? 0) + 1
-      }
-      return {
-        id,
-        name: dir.name,
-        coverUrl: await coverUrlFor(id, albumPath),
-        artist: await albumArtist(albumPath),
-        trackCount: files.length,
-        formats
-      }
-    })
-  )
-  return albums.filter((album) => album.trackCount > 0)
-}
-
-export async function getAlbumTracks(albumId: string) {
-  const albumPath = await resolveId(albumId)
+async function readAlbum(albumId: string, albumPath: string) {
   const coverUrl = await coverUrlFor(albumId, albumPath)
   const files = await listTrackFiles(albumPath)
 
@@ -272,11 +265,12 @@ export async function getAlbumTracks(albumId: string) {
     files.map(async (fileName, index) => {
       const trackPath = join(albumPath, fileName)
       const id = toId(trackPath)
+      const tags = await readTags(trackPath)
       return {
         id,
         albumId,
-        ...(await readTags(trackPath)),
-        streamUrl: `/library/stream/${id}`,
+        ...tags,
+        streamUrl: `/library/stream/${id}?v=${tags.v}`,
         coverUrl,
         trackIndex: index
       }
@@ -293,31 +287,103 @@ export async function getAlbumTracks(albumId: string) {
     trackCount: tracks.length,
     formats
   }
-
   return { album, tracks }
+}
+
+// --- Library snapshot ----------------------------------------------------------------------
+// Scanning a few thousand files takes seconds, so requests are answered from the last scan and a
+// scan older than SNAPSHOT_TTL_MS is redone in the background (new uploads show up within it).
+
+interface Snapshot {
+  albums: LocalAlbum[]
+  tracksByAlbum: Map<string, LocalTrack[]>
+  builtAt: number
+}
+
+let snapshot: Snapshot | null = null
+let building: Promise<Snapshot> | null = null
+
+async function scan(): Promise<Snapshot> {
+  const entries = await fs.readdir(MUSIC_ROOT, { withFileTypes: true })
+  const dirs = entries
+    .filter((entry) => entry.isDirectory())
+    .sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }))
+
+  const read = await Promise.all(
+    dirs.map((dir) => {
+      const albumPath = join(MUSIC_ROOT, dir.name)
+      return readAlbum(toId(albumPath), albumPath)
+    })
+  )
+  const withTracks = read.filter(({ album }) => album.trackCount > 0)
+  return {
+    albums: withTracks.map(({ album }) => album),
+    tracksByAlbum: new Map(withTracks.map(({ album, tracks }) => [album.id, tracks])),
+    builtAt: Date.now()
+  }
+}
+
+function rescan() {
+  building ??= scan()
+    .then((next) => (snapshot = next))
+    .finally(() => (building = null))
+  return building
+}
+
+async function library() {
+  if (!snapshot) return rescan()
+  if (Date.now() - snapshot.builtAt > SNAPSHOT_TTL_MS) void rescan().catch(() => {})
+  return snapshot
+}
+
+export async function listAlbums(): Promise<LocalAlbum[]> {
+  return (await library()).albums
+}
+
+export async function getAlbumTracks(albumId: string) {
+  const { albums, tracksByAlbum } = await library()
+  const album = albums.find((a) => a.id === albumId)
+  const tracks = tracksByAlbum.get(albumId)
+  if (album && tracks) return { album, tracks }
+  // Not in the last scan (just uploaded): read it directly.
+  return readAlbum(albumId, await resolveId(albumId))
 }
 
 /** Every track of every album, in album order (for the Songs and Artists menus). */
 export async function getAllTracks() {
-  const albums = await listAlbums()
-  const lists = await Promise.all(albums.map((album) => getAlbumTracks(album.id)))
-  return lists.flatMap(({ tracks }) => tracks)
+  const { albums, tracksByAlbum } = await library()
+  return albums.flatMap((album) => tracksByAlbum.get(album.id) ?? [])
 }
 
-export async function getCover(albumId: string): Promise<Cover | null> {
+/** `v` (from the URL) keys the memory cache, so a replaced cover isn't served stale. */
+export async function getCover(
+  albumId: string,
+  size: CoverSize = 'large',
+  v = ''
+): Promise<Cover | null> {
   const albumPath = await resolveId(albumId)
-  const cached = thumbnailCache.get(albumPath)
+  const px = COVER_PX[size]
+  const key = `${albumPath}:${px}:${v}`
+  const cached = thumbnailCache.get(key)
   if (cached) return cached
+
+  // Ready-made by the library build.
+  const ready = await fs.readFile(join(albumPath, `thumb-${px}.webp`)).catch(() => null)
+  if (ready) {
+    const thumbnail = { buffer: ready, mime: 'image/webp' }
+    thumbnailCache.set(key, thumbnail)
+    return thumbnail
+  }
 
   const original = await loadCover(albumPath)
   if (!original) return null
   try {
     const buffer = await sharp(original.buffer)
-      .resize(COVER_SIZE, COVER_SIZE, { fit: 'cover', withoutEnlargement: true })
+      .resize(px, px, { fit: 'cover', withoutEnlargement: true })
       .webp({ quality: 80 })
       .toBuffer()
     const thumbnail = { buffer, mime: 'image/webp' }
-    thumbnailCache.set(albumPath, thumbnail)
+    thumbnailCache.set(key, thumbnail)
     return thumbnail
   } catch {
     // Image sharp can't decode: send the original rather than nothing.
