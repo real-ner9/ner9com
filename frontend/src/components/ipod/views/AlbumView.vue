@@ -47,7 +47,7 @@ onMounted(async () => {
 function play(index: number) {
   if (!tracks.value.length) return
   selected.value = index
-  player.playTracks(tracks.value, index, album.value)
+  player.playTracks(tracks.value, index)
   nav.push({ name: 'nowPlaying' })
 }
 

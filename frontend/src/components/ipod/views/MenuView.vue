@@ -3,7 +3,7 @@ import { t } from '@/i18n'
 import { computed, inject, onBeforeUnmount, onMounted, ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import IpodList from '@/components/ipod/IpodList.vue'
-import { useDancersStore } from '@/stores/dancers'
+import { useListNav } from '@/components/ipod/useListNav'
 import { useLibraryStore } from '@/stores/library'
 import { usePlayerStore } from '@/stores/player'
 import { IPOD_NAVIGATOR, type IpodListItem, type IpodView } from '@/types/ipod'
@@ -12,42 +12,39 @@ import { IPOD_NAVIGATOR, type IpodListItem, type IpodView } from '@/types/ipod'
 const nav = inject(IPOD_NAVIGATOR)!
 const player = usePlayerStore()
 const { currentTrack } = storeToRefs(player)
-const dancers = useDancersStore()
-const { isEnabled: dancing } = storeToRefs(dancers)
-const { albums } = storeToRefs(useLibraryStore())
+const library = useLibraryStore()
+const { albums } = storeToRefs(library)
 
-type MenuItem = IpodListItem & { view?: IpodView['name']; action?: () => void }
+type MenuItem = IpodListItem & { view?: IpodView; action?: () => void }
 
+// The iPod classic main menu, without Videos, Photos, Podcasts, Extras and Settings; Fruity Dance
+// takes the place of Extras.
 const items = computed<MenuItem[]>(() => [
-  { id: 'coverflow', label: 'Cover Flow', chevron: true, view: 'coverflow' },
-  { id: 'albums', label: t('ipod.albums'), chevron: true, view: 'albums' },
+  { id: 'music', label: t('ipod.music'), chevron: true, view: { name: 'music' } },
+  { id: 'shuffle', label: t('ipod.shuffleSongs'), action: shuffleSongs },
+  { id: 'dance', label: 'Fruity Dance', chevron: true, view: { name: 'dance' } },
   ...(currentTrack.value
-    ? [{ id: 'now', label: t('ipod.nowPlaying'), chevron: true, view: 'nowPlaying' as const }]
+    ? [{ id: 'now', label: t('ipod.nowPlaying'), chevron: true, view: { name: 'nowPlaying' } as const }]
     : []),
-  // A setting row like on the real iPod: the value sits on the right.
-  {
-    id: 'dance',
-    label: 'Fruity Dance',
-    trailing: dancing.value ? t('ipod.on') : t('ipod.off'),
-    action: toggleDance,
-  },
 ])
 
-function toggleDance() {
-  dancers.toggle()
-  // Wheel/tap presses are user gestures, so the analyser may start here.
-  if (dancing.value) player.getAnalyser()
+/** Every song in random order, with shuffle left on (as on the iPod). */
+async function shuffleSongs() {
+  const all = await library.loadAllTracks()
+  if (!all.length) return
+  player.setShuffle(true)
+  player.playTracks(all, Math.floor(Math.random() * all.length))
+  nav.push({ name: 'nowPlaying' })
 }
-const selected = ref(0)
 
-function activate(index: number) {
-  selected.value = index
-  const item = items.value[index]
-  if (item?.action) item.action()
-  else if (item?.view === 'coverflow' || item?.view === 'albums' || item?.view === 'nowPlaying') {
-    nav.push({ name: item.view })
-  }
-}
+const { selected, choose, handle } = useListNav(
+  () => items.value.length,
+  (index) => {
+    const item = items.value[index]
+    if (item?.action) void item.action()
+    else if (item?.view) nav.push(item.view)
+  },
+)
 
 // Artwork pane: the playing cover, otherwise a slow slideshow of album covers.
 const covers = computed(
@@ -61,17 +58,12 @@ let timer: ReturnType<typeof setInterval> | undefined
 onMounted(() => (timer = setInterval(() => slide.value++, 5000)))
 onBeforeUnmount(() => clearInterval(timer))
 
-defineExpose({
-  scroll: (delta: number) => {
-    selected.value = Math.min(Math.max(selected.value + delta, 0), items.value.length - 1)
-  },
-  select: () => activate(selected.value),
-})
+defineExpose(handle)
 </script>
 
 <template>
   <div class="menu">
-    <IpodList class="menu__list" :items="items" :selected="selected" @activate="activate" />
+    <IpodList class="menu__list" :items="items" :selected="selected" @activate="choose" />
     <div class="menu__art">
       <Transition name="art">
         <img v-if="artwork" :key="artwork" class="menu__image" :src="artwork" alt="" />

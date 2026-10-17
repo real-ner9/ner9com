@@ -1,7 +1,74 @@
 import { t } from '@/i18n'
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { defineStore } from 'pinia'
-import type { MusicAlbum, MusicTrack } from '@/types/music'
+import { useLibraryStore } from '@/stores/library'
+import type { MusicTrack } from '@/types/music'
+
+const STORAGE_KEY = 'ner9-player'
+const MODES_KEY = 'ner9-player-modes'
+/** How often the position is written while playing, in seconds of playback. */
+const SAVE_EVERY_S = 2
+
+/** What was playing when the page was left, so a reload continues from the same spot. */
+export interface SavedSession {
+  albumId: string
+  trackId: string
+  time: number
+  /** False when the visitor paused it: the reload cues it without playing. */
+  playing: boolean
+}
+
+export function readSavedSession(): SavedSession | null {
+  try {
+    const value = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? 'null')
+    return typeof value?.albumId === 'string' && typeof value?.trackId === 'string'
+      ? {
+          albumId: value.albumId,
+          trackId: value.trackId,
+          time: Number(value.time) || 0,
+          playing: value.playing !== false,
+        }
+      : null
+  } catch {
+    return null
+  }
+}
+
+/** Remembers (or with null forgets) the track to resume after a reload. */
+export function writeSavedSession(session: SavedSession | null) {
+  try {
+    if (session) localStorage.setItem(STORAGE_KEY, JSON.stringify(session))
+    else localStorage.removeItem(STORAGE_KEY)
+  } catch {
+    // Private mode: the track just isn't remembered.
+  }
+}
+
+/** Repeat like the iPod: off, the current song, or the whole queue. */
+export type RepeatMode = 'off' | 'one' | 'all'
+export const REPEAT_MODES: RepeatMode[] = ['off', 'one', 'all']
+
+function readModes(): { shuffle: boolean; repeat: RepeatMode } {
+  try {
+    const value = JSON.parse(localStorage.getItem(MODES_KEY) ?? 'null')
+    return {
+      shuffle: value?.shuffle === true,
+      repeat: REPEAT_MODES.includes(value?.repeat) ? value.repeat : 'off',
+    }
+  } catch {
+    return { shuffle: false, repeat: 'off' }
+  }
+}
+
+/** Fisher–Yates; returns a new array. */
+function shuffled<T>(items: T[]) {
+  const result = [...items]
+  for (let i = result.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[result[i], result[j]] = [result[j], result[i]]
+  }
+  return result
+}
 
 /**
  * Global audio player. Owns a single <audio> element that streams tracks straight from the
@@ -9,9 +76,11 @@ import type { MusicAlbum, MusicTrack } from '@/types/music'
  * changes. Components only read state and call actions.
  */
 export const usePlayerStore = defineStore('player', () => {
+  const library = useLibraryStore()
   const queue = ref<MusicTrack[]>([])
+  /** The queue in its own order (album or song list), restored when shuffle is turned off. */
+  let ordered: MusicTrack[] = []
   const currentIndex = ref(-1)
-  const album = ref<MusicAlbum | null>(null)
   const isPlaying = ref(false)
   const isLoading = ref(false)
   const currentTime = ref(0)
@@ -19,6 +88,21 @@ export const usePlayerStore = defineStore('player', () => {
   const errorMessage = ref<string | null>(null)
 
   const currentTrack = computed(() => queue.value[currentIndex.value] ?? null)
+  /** The playing track's album; queues like "Songs" mix albums, so it follows the track. */
+  const album = computed(() =>
+    currentTrack.value ? library.albumById(currentTrack.value.albumId) : null,
+  )
+
+  const savedModes = readModes()
+  const shuffle = ref(savedModes.shuffle)
+  const repeat = ref<RepeatMode>(savedModes.repeat)
+  watch([shuffle, repeat], () => {
+    try {
+      localStorage.setItem(MODES_KEY, JSON.stringify({ shuffle: shuffle.value, repeat: repeat.value }))
+    } catch {
+      // Private mode: the modes just aren't remembered.
+    }
+  })
   const hasNext = computed(() => currentIndex.value < queue.value.length - 1)
   const hasPrevious = computed(() => currentIndex.value > 0)
 
@@ -64,19 +148,60 @@ export const usePlayerStore = defineStore('player', () => {
     audio.addEventListener('waiting', () => (isLoading.value = true))
     audio.addEventListener('playing', () => (isLoading.value = false))
     audio.addEventListener('canplay', () => (isLoading.value = false))
-    audio.addEventListener('timeupdate', () => (currentTime.value = audio!.currentTime))
+    audio.addEventListener('timeupdate', () => {
+      currentTime.value = audio!.currentTime
+      if (Math.abs(currentTime.value - savedTime) >= SAVE_EVERY_S) saveSession()
+    })
     audio.addEventListener('durationchange', () => {
       duration.value = Number.isFinite(audio!.duration) ? audio!.duration : 0
     })
-    audio.addEventListener('ended', () => (hasNext.value ? next() : (isPlaying.value = false)))
+    audio.addEventListener('ended', () => {
+      if (repeat.value === 'one') {
+        audio!.currentTime = 0
+        void play()
+      } else next()
+    })
     audio.addEventListener('error', () => {
       isLoading.value = false
       isPlaying.value = false
       if (audio?.getAttribute('src')) errorMessage.value = t('errors.playback')
     })
+    window.addEventListener('pagehide', saveSession)
     setupMediaSession()
     return audio
   }
+
+  // --- Remembering the track across reloads ---------------------------------------------------
+
+  let savedTime = 0
+
+  /**
+   * Whether the visitor wants music: set by play(), cleared by pause(). Not isPlaying, which is
+   * also false while the browser blocks autoplay; that must not be remembered as a pause.
+   */
+  const wantsToPlay = ref(false)
+
+  /** What is playing and where, as saved for a reload; null when nothing is. */
+  function session(): SavedSession | null {
+    const track = currentTrack.value
+    return track
+      ? {
+          albumId: track.albumId,
+          trackId: track.id,
+          time: currentTime.value,
+          playing: wantsToPlay.value,
+        }
+      : null
+  }
+
+  function saveSession() {
+    savedTime = currentTime.value
+    writeSavedSession(session())
+  }
+
+  // A new track, the queue running out or play/pause is saved at once; the position follows
+  // while playing.
+  watch([currentTrack, wantsToPlay], saveSession)
 
   function loadCurrent(autoplay: boolean, startAt = 0) {
     const track = currentTrack.value
@@ -103,6 +228,7 @@ export const usePlayerStore = defineStore('player', () => {
   /** Resolves false when playback didn't start (e.g. the browser blocked autoplay). */
   async function play(): Promise<boolean> {
     if (!currentTrack.value) return false
+    wantsToPlay.value = true
     isLoading.value = true
     try {
       if (audioContext?.state === 'suspended') void audioContext.resume()
@@ -118,6 +244,7 @@ export const usePlayerStore = defineStore('player', () => {
   }
 
   function pause() {
+    wantsToPlay.value = false
     audio?.pause()
   }
 
@@ -127,25 +254,61 @@ export const usePlayerStore = defineStore('player', () => {
   }
 
   /**
-   * Replaces the queue with an album's tracks and starts at `startIndex`. `startAt` (seconds)
-   * begins the first track mid-way; `autoplay: false` only cues it.
+   * Replaces the queue with `tracks` (an album, the song list…) and starts at `startIndex`.
+   * With shuffle on, that track plays first and the rest follow in random order. `startAt`
+   * (seconds) begins the first track mid-way; `autoplay: false` only cues it.
    */
   function playTracks(
     tracks: MusicTrack[],
     startIndex = 0,
-    from: MusicAlbum | null = null,
     { autoplay = true, startAt = 0 } = {},
   ) {
-    queue.value = [...tracks]
-    album.value = from
-    currentIndex.value = Math.min(Math.max(startIndex, 0), tracks.length - 1)
+    ordered = [...tracks]
+    const index = Math.min(Math.max(startIndex, 0), tracks.length - 1)
+    if (shuffle.value) {
+      const first = tracks[index]
+      queue.value = [first, ...shuffled(tracks.filter((_, i) => i !== index))]
+      currentIndex.value = 0
+    } else {
+      queue.value = [...tracks]
+      currentIndex.value = index
+    }
     loadCurrent(autoplay, startAt)
   }
 
+  /** Shuffle on: the rest of the queue is reordered randomly. Off: back to its own order. */
+  function setShuffle(on: boolean) {
+    if (shuffle.value === on) return
+    shuffle.value = on
+    const track = currentTrack.value
+    if (!track) return
+    if (on) {
+      queue.value = [track, ...shuffled(ordered.filter((t) => t.id !== track.id))]
+      currentIndex.value = 0
+    } else {
+      queue.value = [...ordered]
+      currentIndex.value = Math.max(ordered.findIndex((t) => t.id === track.id), 0)
+    }
+  }
+
+  /**
+   * Past the last track the queue wraps with Repeat All; otherwise it ends like on the iPod:
+   * music stops and clears.
+   */
   function next() {
-    if (!hasNext.value) return
-    currentIndex.value += 1
+    if (hasNext.value) currentIndex.value += 1
+    else if (repeat.value === 'all' && queue.value.length) currentIndex.value = 0
+    else return stop()
     loadCurrent(true)
+  }
+
+  function stop() {
+    queue.value = []
+    ordered = []
+    currentIndex.value = -1
+    isPlaying.value = false
+    loadCurrent(false)
+    if ('mediaSession' in navigator) navigator.mediaSession.metadata = null
   }
 
   function previous() {
@@ -197,6 +360,11 @@ export const usePlayerStore = defineStore('player', () => {
     errorMessage,
     hasNext,
     hasPrevious,
+    shuffle,
+    repeat,
+    setShuffle,
+    wantsToPlay,
+    session,
     playTracks,
     play,
     pause,

@@ -151,24 +151,20 @@ function click() {
   position: absolute;
   inset: 0;
   border-radius: 50%;
-  background:
-    radial-gradient(circle at 50% 35%, rgba(255, 255, 255, 0.9), transparent 60%),
-    linear-gradient(180deg, #f6f6f7 0%, #e1e2e5 55%, #d3d4d8 100%);
+  // Colours come from IpodPlayer (silver or black model).
+  background: var(--wheel-face);
   box-shadow:
-    inset 0 1px 1px rgba(255, 255, 255, 0.9),
+    inset 0 1px 1px var(--ipod-shine),
     inset 0 -2px 4px rgba(0, 0, 0, 0.08),
-    0 0 0 1px #b9bbc0,
+    0 0 0 1px var(--wheel-rim),
     0 1px 2px rgba(0, 0, 0, 0.15);
-  cursor: grab;
-
-  &:active {
-    cursor: grabbing;
-  }
+  // MENU, ⏮, ⏭ and ▶❚❚ are buttons; rotating works with the same pointer.
+  cursor: pointer;
 }
 
 .wheel__label {
   position: absolute;
-  color: #a3a5ab;
+  color: var(--wheel-label);
   font-family: -apple-system, 'Helvetica Neue', Helvetica, Arial, sans-serif;
   font-weight: 700;
   font-size: calc(var(--ipod-w) * 0.042);
@@ -215,15 +211,15 @@ function click() {
   border: none;
   border-radius: 50%;
   transform: translate(-50%, -50%);
-  background: linear-gradient(180deg, #fbfbfc 0%, #e6e7ea 100%);
+  background: var(--wheel-center);
   box-shadow:
-    0 0 0 1px #b4b6bb,
-    inset 0 1px 1px #fff,
+    0 0 0 1px var(--wheel-center-rim),
+    inset 0 1px 1px var(--ipod-shine),
     inset 0 -1px 2px rgba(0, 0, 0, 0.08);
   cursor: pointer;
 
   &:active {
-    background: linear-gradient(180deg, #e9eaed 0%, #d7d8dc 100%);
+    background: var(--wheel-center-pressed);
   }
 }
 </style>

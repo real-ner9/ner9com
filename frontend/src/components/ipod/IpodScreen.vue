@@ -1,15 +1,25 @@
 <script setup lang="ts">
 import { t } from '@/i18n'
-import { computed, provide, ref, type Component } from 'vue'
+import { computed, provide, ref, watch, type Component } from 'vue'
 import { storeToRefs } from 'pinia'
 import AlbumView from '@/components/ipod/views/AlbumView.vue'
 import AlbumsView from '@/components/ipod/views/AlbumsView.vue'
+import ArtistsView from '@/components/ipod/views/ArtistsView.vue'
 import CoverFlowView from '@/components/ipod/views/CoverFlowView.vue'
+import DanceMovesView from '@/components/ipod/views/DanceMovesView.vue'
+import DanceView from '@/components/ipod/views/DanceView.vue'
 import MenuView from '@/components/ipod/views/MenuView.vue'
+import MusicView from '@/components/ipod/views/MusicView.vue'
 import NowPlayingView from '@/components/ipod/views/NowPlayingView.vue'
+import SongsView from '@/components/ipod/views/SongsView.vue'
 import { useLibraryStore } from '@/stores/library'
 import { usePlayerStore } from '@/stores/player'
-import { IPOD_NAVIGATOR, type IpodView, type IpodViewHandle } from '@/types/ipod'
+import {
+  IPOD_LIST_MEMORY,
+  IPOD_NAVIGATOR,
+  type IpodView,
+  type IpodViewHandle,
+} from '@/types/ipod'
 
 /**
  * The iPod display: title bar plus a stack of views. Entering a menu slides left, going back
@@ -25,17 +35,26 @@ const { currentTrack, isPlaying, isLoading } = storeToRefs(player)
 
 const VIEWS: Record<IpodView['name'], Component> = {
   menu: MenuView,
+  music: MusicView,
   coverflow: CoverFlowView,
+  artists: ArtistsView,
   albums: AlbumsView,
   album: AlbumView,
+  songs: SongsView,
   nowPlaying: NowPlayingView,
+  dance: DanceView,
+  danceMoves: DanceMovesView,
 }
 
-// Opens straight into Cover Flow; MENU goes up to the main menu.
-const stack = ref<IpodView[]>([{ name: 'menu' }, { name: 'coverflow' }])
+// Opens straight into Cover Flow; MENU goes up to Music, then the main menu.
+const stack = ref<IpodView[]>([{ name: 'menu' }, { name: 'music' }, { name: 'coverflow' }])
 const transition = ref('ipod-push')
 const view = computed(() => stack.value[stack.value.length - 1])
 const viewRef = ref<IpodViewHandle | null>(null)
+/** Everything but the name is passed to the view as props (albumId, artist…). */
+const viewProps = computed(() =>
+  Object.fromEntries(Object.entries(view.value).filter(([key]) => key !== 'name')),
+)
 
 const title = computed(() => {
   switch (view.value.name) {
@@ -43,8 +62,18 @@ const title = computed(() => {
       return 'iPod'
     case 'coverflow':
       return 'Cover Flow'
+    case 'music':
+      return t('ipod.music')
+    case 'artists':
+      return t('ipod.artists')
     case 'albums':
-      return t('ipod.albums')
+      return view.value.artist ?? t('ipod.albums')
+    case 'songs':
+      return t('ipod.songs')
+    case 'dance':
+      return 'Fruity Dance'
+    case 'danceMoves':
+      return t('ipod.dancer', { n: view.value.dancer + 1 })
     case 'album':
       return library.albumById(view.value.albumId)?.name ?? t('ipod.album')
     case 'nowPlaying':
@@ -58,7 +87,11 @@ const title = computed(() => {
 const transitionFor = (from: IpodView, to: IpodView, dir: 'push' | 'pop') =>
   from.name === 'album' || to.name === 'album' ? 'ipod-none' : `ipod-${dir}`
 
+const listMemory = new Map<number, number>()
+
 function push(next: IpodView) {
+  // A screen opened anew starts at its top row.
+  listMemory.delete(stack.value.length + 1)
   transition.value = transitionFor(view.value, next, 'push')
   stack.value = [...stack.value, next]
 }
@@ -78,6 +111,16 @@ async function back(): Promise<boolean> {
 }
 
 provide(IPOD_NAVIGATOR, { push, back })
+provide(IPOD_LIST_MEMORY, {
+  depth: () => stack.value.length,
+  get: (depth) => listMemory.get(depth),
+  set: (depth, index) => listMemory.set(depth, index),
+})
+
+// When the queue runs out the iPod leaves Now Playing for the menu it came from.
+watch(currentTrack, (track) => {
+  if (!track && view.value.name === 'nowPlaying') void back()
+})
 
 // Swipe right anywhere on the screen = back, except in views that use horizontal swipes.
 let swipe: { x: number; y: number } | null = null
@@ -117,7 +160,7 @@ defineExpose({
           :key="stack.length + view.name"
           ref="viewRef"
           class="screen__view"
-          v-bind="view.name === 'album' ? { albumId: view.albumId } : {}"
+          v-bind="viewProps"
         />
       </Transition>
 

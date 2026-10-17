@@ -1,16 +1,58 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { t } from '@/i18n'
+import { computed, ref } from 'vue'
 import { storeToRefs } from 'pinia'
-import { usePlayerStore } from '@/stores/player'
+import { REPEAT_MODES, usePlayerStore } from '@/stores/player'
 import { formatTime } from '@/utils/format'
 
-// "Now Playing": cover with reflection, track info and the glossy progress bar.
-// On iOS the volume of an <audio> element can't be changed, so the wheel scrubs instead.
+// "Now Playing": cover with reflection, track info and a bottom panel. The center button cycles
+// the panel like on the iPod classic: scrubber → shuffle → repeat. The wheel scrubs (on iOS the
+// volume of an <audio> element can't be changed) or, on the other panels, changes the setting.
 const SEEK_STEP_S = 5
 
 const player = usePlayerStore()
-const { currentTrack, album, queue, currentIndex, currentTime, duration, isLoading, errorMessage } =
-  storeToRefs(player)
+const {
+  currentTrack,
+  album,
+  queue,
+  currentIndex,
+  currentTime,
+  duration,
+  isLoading,
+  errorMessage,
+  shuffle,
+  repeat,
+} = storeToRefs(player)
+
+const PANELS = ['scrubber', 'shuffle', 'repeat'] as const
+const panel = ref<(typeof PANELS)[number]>('scrubber')
+
+/** The options of the shuffle or repeat panel, with the active one highlighted. */
+const options = computed(() =>
+  panel.value === 'shuffle'
+    ? [
+        { label: t('ipod.off'), active: !shuffle.value },
+        { label: t('ipod.songs'), active: shuffle.value },
+      ]
+    : [
+        { label: t('ipod.off'), active: repeat.value === 'off' },
+        { label: t('ipod.repeatOne'), active: repeat.value === 'one' },
+        { label: t('ipod.repeatAll'), active: repeat.value === 'all' },
+      ],
+)
+
+function scroll(delta: number) {
+  if (panel.value === 'scrubber') player.seek(currentTime.value + delta * SEEK_STEP_S)
+  else if (panel.value === 'shuffle') player.setShuffle(delta > 0)
+  else {
+    const index = REPEAT_MODES.indexOf(repeat.value) + Math.sign(delta)
+    repeat.value = REPEAT_MODES[Math.min(Math.max(index, 0), REPEAT_MODES.length - 1)]
+  }
+}
+
+function nextPanel() {
+  panel.value = PANELS[(PANELS.indexOf(panel.value) + 1) % PANELS.length]
+}
 
 const progress = computed(() => (duration.value ? (currentTime.value / duration.value) * 100 : 0))
 const remaining = computed(() =>
@@ -23,16 +65,21 @@ function seekFromBar(event: MouseEvent) {
   player.seek(((event.clientX - rect.left) / rect.width) * duration.value)
 }
 
-defineExpose({
-  scroll: (delta: number) => player.seek(currentTime.value + delta * SEEK_STEP_S),
-  select: () => player.toggle(),
-})
+defineExpose({ scroll, select: nextPanel })
 </script>
 
 <template>
   <div class="now">
     <template v-if="currentTrack">
-      <p class="now__position">{{ $t('ipod.position', { n: currentIndex + 1, total: queue.length }) }}</p>
+      <p class="now__position">
+        {{ $t('ipod.position', { n: currentIndex + 1, total: queue.length }) }}
+        <span class="now__modes">
+          <span v-if="shuffle" :title="$t('ipod.shuffle')">⤨</span>
+          <span v-if="repeat !== 'off'" :title="$t('ipod.repeat')">
+            ⟳<template v-if="repeat === 'one'">1</template>
+          </span>
+        </span>
+      </p>
 
       <div class="now__main">
         <div class="now__cover">
@@ -48,7 +95,23 @@ defineExpose({
         </div>
       </div>
 
-      <div class="now__progress">
+      <div v-if="panel !== 'scrubber'" class="now__setting" @click="nextPanel">
+        <span class="now__setting-name">
+          {{ panel === 'shuffle' ? $t('ipod.shuffle') : $t('ipod.repeat') }}
+        </span>
+        <span class="now__options">
+          <span
+            v-for="option in options"
+            :key="option.label"
+            class="now__option"
+            :class="{ 'now__option--active': option.active }"
+          >
+            {{ option.label }}
+          </span>
+        </span>
+      </div>
+
+      <div v-else class="now__progress">
         <div class="now__bar" @click="seekFromBar">
           <div class="now__fill" :style="{ width: `${progress}%` }" />
         </div>
@@ -74,6 +137,8 @@ defineExpose({
 }
 
 .now__position {
+  display: flex;
+  justify-content: space-between;
   color: #4b4f58;
   font-weight: 700;
   font-size: max(10px, 5cqh);
@@ -164,6 +229,43 @@ defineExpose({
   margin-top: 2px;
   font-weight: 700;
   font-size: max(10px, 4.8cqh);
+}
+
+.now__modes {
+  display: flex;
+  gap: 6px;
+  color: #2a62c0;
+}
+
+// Shuffle / repeat panel: the setting name and its options, the active one in the iPod's blue.
+.now__setting {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-weight: 700;
+  font-size: max(10px, 4.8cqh);
+  cursor: pointer;
+}
+
+.now__options {
+  display: flex;
+  border: 1px solid #7d8189;
+}
+
+.now__option {
+  flex: 1;
+  padding: 2px 0;
+  background: linear-gradient(180deg, #fdfdfd 0%, #d7d9dd 100%);
+  text-align: center;
+
+  & + & {
+    border-left: 1px solid #7d8189;
+  }
+
+  &--active {
+    background: linear-gradient(180deg, #b7d4f6 0%, #5b97e6 50%, #2f6cd1 51%, #2a62c0 100%);
+    color: #fff;
+  }
 }
 
 .now__empty {

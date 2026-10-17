@@ -243,6 +243,19 @@ function onKeydown(event: KeyboardEvent) {
 
 .ipod-sheet {
   --ipod-w: min(86vw, 340px);
+  // Silver iPod classic; the FL theme switches to the black model (below). Read by the wheel too.
+  --ipod-front: linear-gradient(180deg, #f3f3f5 0%, #dfe0e3 40%, #cdcfd3 100%);
+  --ipod-brush: rgba(255, 255, 255, 0.05);
+  --ipod-rim: #a7a9ae;
+  --ipod-shine: rgba(255, 255, 255, 0.8);
+  --wheel-face:
+    radial-gradient(circle at 50% 35%, rgba(255, 255, 255, 0.9), transparent 60%),
+    linear-gradient(180deg, #f6f6f7 0%, #e1e2e5 55%, #d3d4d8 100%);
+  --wheel-rim: #b9bbc0;
+  --wheel-label: #a3a5ab;
+  --wheel-center: linear-gradient(180deg, #fbfbfc 0%, #e6e7ea 100%);
+  --wheel-center-pressed: linear-gradient(180deg, #e9eaed 0%, #d7d8dc 100%);
+  --wheel-center-rim: #b4b6bb;
   position: fixed;
   bottom: 0;
   left: 50%;
@@ -305,17 +318,22 @@ function onKeydown(event: KeyboardEvent) {
   background:
     repeating-linear-gradient(
       90deg,
-      rgba(255, 255, 255, 0.05) 0 1px,
+      var(--ipod-brush) 0 1px,
       rgba(0, 0, 0, 0.015) 1px 2px,
       transparent 2px 4px
     ),
-    linear-gradient(180deg, #f3f3f5 0%, #dfe0e3 40%, #cdcfd3 100%);
+    var(--ipod-front);
   box-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.8),
+    inset 0 0 0 1px var(--ipod-shine),
     inset 0 -3px 8px rgba(0, 0, 0, 0.12),
-    0 0 0 1px #a7a9ae,
+    0 0 0 1px var(--ipod-rim),
     0 24px 60px rgba(0, 0, 0, 0.45);
+  // Open, the body drags the sheet down; collapsed, a tap opens it.
   cursor: grab;
+
+  .ipod-sheet:not(.ipod-sheet--open) & {
+    cursor: pointer;
+  }
 }
 
 .ipod__screen {
@@ -345,6 +363,22 @@ function onKeydown(event: KeyboardEvent) {
   left: 50%;
   width: calc(var(--ipod-w) * 0.64);
   transform: translateX(-50%);
+}
+
+// Black iPod classic (2007–2009): graphite anodized front, black wheel with grey legends.
+:root[data-theme='fl'] .ipod-sheet {
+  --ipod-front: linear-gradient(180deg, #3a3b3f 0%, #232427 45%, #18191b 100%);
+  --ipod-brush: rgba(255, 255, 255, 0.025);
+  --ipod-rim: #0b0b0c;
+  --ipod-shine: rgba(255, 255, 255, 0.14);
+  --wheel-face:
+    radial-gradient(circle at 50% 30%, rgba(255, 255, 255, 0.1), transparent 60%),
+    linear-gradient(180deg, #2a2b2e 0%, #1b1c1e 55%, #121314 100%);
+  --wheel-rim: #050506;
+  --wheel-label: #8b8d93;
+  --wheel-center: linear-gradient(180deg, #2c2d30 0%, #1a1b1d 100%);
+  --wheel-center-pressed: linear-gradient(180deg, #161719 0%, #222326 100%);
+  --wheel-center-rim: #070708;
 }
 
 @media (min-width: 768px) {

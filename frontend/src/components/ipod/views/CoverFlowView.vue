@@ -15,14 +15,22 @@ const VISIBLE_SIDE = 4 // covers rendered on each side of the centered one
 const SWIPE_STEP_PX = 36
 
 const ipod = useIpodStore()
-const selected = ref(
-  ipod.coverFlowIndex ??
-    Math.max(
-      0,
-      albums.value.findIndex((a) => a.id === playingAlbum.value?.id),
-    ),
-)
+const selected = ref(ipod.coverFlowIndex ?? 0)
 watch(selected, (index) => (ipod.coverFlowIndex = index))
+
+// Center the playing album once per album: also when it arrives after the view mounted (the
+// intro track is cued while the album list is still loading), without undoing later browsing.
+watch(
+  [() => playingAlbum.value?.id, () => albums.value.length],
+  ([albumId]) => {
+    if (!albumId || albumId === ipod.coverFlowAlbumId) return
+    const index = albums.value.findIndex((a) => a.id === albumId)
+    if (index < 0) return
+    selected.value = index
+    ipod.coverFlowAlbumId = albumId
+  },
+  { immediate: true },
+)
 const current = computed(() => albums.value[selected.value] ?? null)
 
 function clamp(index: number) {
