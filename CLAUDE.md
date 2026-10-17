@@ -25,7 +25,7 @@ npx tsc --noEmit             # type-check; a type error makes `npm run dev` exit
 
 # frontend/
 npm run dev                  # vite on 127.0.0.1:4100 (VUE_DEVTOOLS=1 to enable Vue DevTools)
-npm run tunnel               # named Cloudflare tunnel ner9-local: https://ner9.com -> :4100
+npm run tunnel               # named Cloudflare tunnel ner9-local: https://local.ner9.com -> :4100
 npm run build                # vue-tsc + vite build
 npx eslint .                 # `npm run lint` runs with --fix
 npm run test:unit            # vitest; single file: npx vitest run path/to/file.spec.ts (unit tests only; there are no e2e tests)
@@ -122,7 +122,7 @@ There is no music page. `components/ipod/IpodPlayer.vue` is rendered once in `Ap
 
 ## Gotchas
 
-- The dev server is public at https://ner9.com (and www) through the named tunnel `ner9-local`: config `frontend/cloudflared.yml`, credentials `~/.cloudflared/ner9-local.json`, DNS = proxied CNAMEs to `3e6a5e73-38d8-4fe3-ab6f-87fab0437703.cfargotunnel.com`. `~/.cloudflared/cert.pem` is for the claw-star.com zone, so `cloudflared tunnel route dns` must not be used for ner9.com (it would create `ner9.com.claw-star.com`); edit ner9.com DNS in the dashboard.
+- Production runs on the owner's VPS at https://ner9.com. The local dev server is public at https://local.ner9.com (for testing from the phone, like Claw's local.claw-star.com) through the named tunnel `ner9-local`: config `frontend/cloudflared.yml`, credentials `~/.cloudflared/ner9-local.json`, DNS = proxied CNAME `local` to `3e6a5e73-38d8-4fe3-ab6f-87fab0437703.cfargotunnel.com`. `~/.cloudflared/cert.pem` is for the claw-star.com zone, so `cloudflared tunnel route dns` must not be used for ner9.com (it would create `ner9.com.claw-star.com`); edit ner9.com DNS in the dashboard.
 - `~/.cloudflared/config.yml` belongs to Claw (catch-all 404 ingress); `npm run tunnel` passes `--config cloudflared.yml` so it isn't loaded.
 - `server.allowedHosts` in `vite.config.ts` must list every tunnel hostname, or Vite rejects the requests.
 - Ports 2001, 3000 and 5434 are taken by the owner's other projects (claw, cadry, rearden), which is why ner9 uses 4100, 4101 and 5436.

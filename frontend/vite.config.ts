@@ -21,8 +21,8 @@ export default defineConfig({
     },
     host: '127.0.0.1',
     port: 4100,
-    // Public hostnames of the named tunnel (npm run tunnel, frontend/cloudflared.yml).
-    allowedHosts: ['ner9.com', 'www.ner9.com'],
+    // Local dev tunnel hostname (npm run tunnel, frontend/cloudflared.yml).
+    allowedHosts: ['local.ner9.com'],
     proxy: {
       // The backend has no /api prefix; strip it so /api/library/... hits /library/...
       '/api': {

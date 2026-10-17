@@ -1,12 +1,10 @@
-# Named tunnel: ner9.com -> Vite dev server. Run with `npm run tunnel`.
+# Local dev tunnel: local.ner9.com -> Vite dev server (ner9.com itself is the VPS). Run with `npm run tunnel`.
 # Passing this file explicitly keeps cloudflared from loading ~/.cloudflared/config.yml (Claw's tunnel).
 tunnel: ner9-local
 credentials-file: C:\Users\Playboi\.cloudflared\ner9-local.json
 no-autoupdate: true
 
 ingress:
-  - hostname: ner9.com
-    service: http://127.0.0.1:4100
-  - hostname: www.ner9.com
+  - hostname: local.ner9.com
     service: http://127.0.0.1:4100
   - service: http_status:404
