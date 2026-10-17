@@ -5,15 +5,16 @@ import { parseFile } from 'music-metadata'
 import sharp from 'sharp'
 
 /**
- * Music library backed by the `music/` folder: one sub-folder per album, audio files inside,
- * optionally a cover image.
+ * Music library backed by a folder (MUSIC_DIR, `music/` by default): one sub-folder per album,
+ * audio files inside, optionally a cover image. scripts/build_web_library.py produces that layout
+ * from the owner's nested collection.
  *
  * Album and track ids are short hashes of the path relative to MUSIC_ROOT (with forward slashes,
  * so they match across OSes). They must stay short: Fastify rejects URL params over 100 chars
  * with a 404, which is what broke long album + track names when ids were base64 paths. Ids only
  * resolve through an index of real files, so a request can never reach outside the library.
  */
-const MUSIC_ROOT = resolve(process.cwd(), 'music')
+const MUSIC_ROOT = resolve(process.cwd(), process.env.MUSIC_DIR || 'music')
 
 const AUDIO_MIME: Record<string, string> = {
   '.mp3': 'audio/mpeg',
@@ -35,6 +36,8 @@ export interface LocalAlbum {
   readonly id: string
   readonly name: string
   readonly coverUrl: string | null
+  /** From album.json (written by scripts/build_web_library.py); null without one. */
+  readonly artist: string | null
   readonly trackCount: number
   /** Track count per exact MIME type, so clients can hide albums their browser can't play. */
   readonly formats: Record<string, number>
@@ -72,10 +75,15 @@ export interface StreamResult {
   stream: ReturnType<typeof createReadStream>
 }
 
-// Files on disk rarely change while the server runs, so metadata is cached per path.
-const coverCache = new Map<string, Cover | null>()
+/** Where an album's cover comes from: an image file in the folder or art embedded in a track. */
+type CoverSource = { file: string } | { track: string }
+
+// Files on disk rarely change while the server runs, so metadata is cached per path. Only the
+// cover's source is kept, not the image: originals of hundreds of albums would fill the memory.
+const coverSourceCache = new Map<string, CoverSource | null>()
 const thumbnailCache = new Map<string, Cover>()
 const tagCache = new Map<string, TrackTags>()
+const artistCache = new Map<string, string | null>()
 
 /** Covers are served as square webp thumbnails: originals can be several hundred KB. */
 const COVER_SIZE = 600
@@ -161,37 +169,63 @@ function mimeWithCodec(baseMime: string, codec: string | undefined) {
   return baseMime
 }
 
-async function loadCover(albumPath: string): Promise<Cover | null> {
-  if (coverCache.has(albumPath)) return coverCache.get(albumPath) ?? null
+async function embeddedPicture(trackPath: string) {
+  try {
+    const { common } = await parseFile(trackPath, { duration: false })
+    return common.picture?.[0] ?? null
+  } catch {
+    return null
+  }
+}
 
-  let cover: Cover | null = null
+async function findCover(albumPath: string): Promise<CoverSource | null> {
+  if (coverSourceCache.has(albumPath)) return coverSourceCache.get(albumPath) ?? null
+
+  let source: CoverSource | null = null
   const coverFile = (await fs.readdir(albumPath)).find(isCover)
   if (coverFile) {
-    cover = {
-      buffer: await fs.readFile(join(albumPath, coverFile)),
-      mime: COVER_MIME[extname(coverFile).toLowerCase()]
-    }
+    source = { file: join(albumPath, coverFile) }
   } else {
     const [firstTrack] = await listTrackFiles(albumPath)
-    if (firstTrack) {
-      try {
-        const { common } = await parseFile(join(albumPath, firstTrack), { duration: false })
-        const picture = common.picture?.[0]
-        if (picture?.data) {
-          cover = { buffer: Buffer.from(picture.data), mime: picture.format || 'image/jpeg' }
-        }
-      } catch {
-        // No embedded art.
-      }
-    }
+    if (firstTrack && (await embeddedPicture(join(albumPath, firstTrack))))
+      source = { track: join(albumPath, firstTrack) }
   }
 
-  coverCache.set(albumPath, cover)
-  return cover
+  coverSourceCache.set(albumPath, source)
+  return source
+}
+
+async function loadCover(albumPath: string): Promise<Cover | null> {
+  const source = await findCover(albumPath)
+  if (!source) return null
+  if ('file' in source) {
+    return {
+      buffer: await fs.readFile(source.file),
+      mime: COVER_MIME[extname(source.file).toLowerCase()]
+    }
+  }
+  const picture = await embeddedPicture(source.track)
+  return picture?.data
+    ? { buffer: Buffer.from(picture.data), mime: picture.format || 'image/jpeg' }
+    : null
+}
+
+/** The album's artist from its album.json, if it has one. */
+async function albumArtist(albumPath: string) {
+  if (artistCache.has(albumPath)) return artistCache.get(albumPath) ?? null
+  let artist: string | null = null
+  try {
+    const info = JSON.parse(await fs.readFile(join(albumPath, 'album.json'), 'utf8'))
+    if (typeof info?.artist === 'string' && info.artist.trim()) artist = info.artist.trim()
+  } catch {
+    // No album.json (albums added by hand): clients fall back to the tracks' tags.
+  }
+  artistCache.set(albumPath, artist)
+  return artist
 }
 
 async function coverUrlFor(albumId: string, albumPath: string) {
-  return (await loadCover(albumPath)) ? `/library/cover/${albumId}` : null
+  return (await findCover(albumPath)) ? `/library/cover/${albumId}` : null
 }
 
 export async function listAlbums(): Promise<LocalAlbum[]> {
@@ -214,6 +248,7 @@ export async function listAlbums(): Promise<LocalAlbum[]> {
         id,
         name: dir.name,
         coverUrl: await coverUrlFor(id, albumPath),
+        artist: await albumArtist(albumPath),
         trackCount: files.length,
         formats
       }
@@ -248,11 +283,19 @@ export async function getAlbumTracks(albumId: string) {
     id: albumId,
     name: basename(albumPath),
     coverUrl,
+    artist: await albumArtist(albumPath),
     trackCount: tracks.length,
     formats
   }
 
   return { album, tracks }
+}
+
+/** Every track of every album, in album order (for the Songs and Artists menus). */
+export async function getAllTracks() {
+  const albums = await listAlbums()
+  const lists = await Promise.all(albums.map((album) => getAlbumTracks(album.id)))
+  return lists.flatMap(({ tracks }) => tracks)
 }
 
 export async function getCover(albumId: string): Promise<Cover | null> {

@@ -1,7 +1,7 @@
 import { t } from '@/i18n'
 import { ref } from 'vue'
 import { defineStore } from 'pinia'
-import { fetchAlbumTracks, fetchAlbums } from '@/api/library'
+import { fetchAlbumTracks, fetchAlbums, fetchAllTracks } from '@/api/library'
 import type { MusicAlbum, MusicTrack } from '@/types/music'
 
 /** Albums and their tracks, loaded lazily from the backend and cached for the session. */
@@ -54,5 +54,56 @@ export const useLibraryStore = defineStore('library', () => {
 
   const albumById = (albumId: string) => albums.value.find((album) => album.id === albumId) ?? null
 
-  return { albums, tracksByAlbum, isLoading, errorMessage, loadAlbums, loadTracks, albumById }
+  let allTracksRequest: Promise<MusicTrack[]> | null = null
+
+  /**
+   * Every playable track, album by album (for Songs, Artists and Shuffle Songs), in one request;
+   * fills the per-album cache too.
+   */
+  function loadAllTracks(): Promise<MusicTrack[]> {
+    allTracksRequest ??= (async () => {
+      await loadAlbums()
+      try {
+        const tracks = await fetchAllTracks()
+        const byAlbum: Record<string, MusicTrack[]> = {}
+        for (const track of tracks) (byAlbum[track.albumId] ??= []).push(track)
+        tracksByAlbum.value = { ...tracksByAlbum.value, ...byAlbum }
+        return tracks
+      } catch (error) {
+        allTracksRequest = null
+        errorMessage.value = error instanceof Error ? error.message : t('errors.tracks')
+        return []
+      }
+    })()
+    return allTracksRequest
+  }
+
+  /**
+   * The album's artist: from the backend (the collection's artist folder), or else the one
+   * credited on most of its tracks, so features on a single track don't split the album; null
+   * until the tracks are loaded.
+   */
+  function albumArtist(albumId: string) {
+    const known = albumById(albumId)?.artist
+    if (known) return known
+    const counts = new Map<string, number>()
+    for (const track of tracksByAlbum.value[albumId] ?? []) {
+      if (track.artist) counts.set(track.artist, (counts.get(track.artist) ?? 0) + 1)
+    }
+    let best: string | null = null
+    for (const [artist, count] of counts) if (!best || count > counts.get(best)!) best = artist
+    return best
+  }
+
+  return {
+    albums,
+    tracksByAlbum,
+    isLoading,
+    errorMessage,
+    loadAlbums,
+    loadTracks,
+    loadAllTracks,
+    albumById,
+    albumArtist,
+  }
 })

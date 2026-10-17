@@ -33,6 +33,14 @@ export async function fetchAlbums(): Promise<MusicAlbum[]> {
     .filter((album) => album.trackCount > 0)
 }
 
+/** Every playable track of the library in one request. */
+export async function fetchAllTracks(): Promise<MusicTrack[]> {
+  const { tracks } = await apiGet<{ tracks: MusicTrack[] }>('/library/tracks')
+  return tracks
+    .filter((track) => canPlay(track.mimeType))
+    .map((track) => ({ ...withUrls(track), streamUrl: apiUrl(track.streamUrl) }))
+}
+
 export async function fetchAlbumTracks(albumId: string): Promise<MusicTrack[]> {
   const { tracks } = await apiGet<{ tracks: MusicTrack[] }>(
     `/library/albums/${encodeURIComponent(albumId)}/tracks`,

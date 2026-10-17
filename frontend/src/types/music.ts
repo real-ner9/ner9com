@@ -2,6 +2,8 @@ export interface MusicAlbum {
   id: string
   name: string
   coverUrl: string | null
+  /** The collection's artist folder, when the library was built by the script. */
+  artist?: string | null
   trackCount: number
   /** Track count per exact MIME type (with codec), e.g. { 'audio/mpeg': 12 }. */
   formats: Record<string, number>

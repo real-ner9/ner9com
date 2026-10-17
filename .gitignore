@@ -48,3 +48,8 @@ build/Release
 
 # Browser automation artifacts
 .playwright-mcp
+
+# Music library: lives on the VPS (/srv/ner9-music), built by backend/scripts/build_web_library.py
+backend/music/
+backend/music-public/
+__pycache__/
