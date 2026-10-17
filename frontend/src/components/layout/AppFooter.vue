@@ -46,6 +46,7 @@ const year = new Date().getFullYear()
 
 .footer__contacts {
   display: flex;
-  gap: 16px;
+  flex-wrap: wrap;
+  gap: 6px 16px;
 }
 </style>

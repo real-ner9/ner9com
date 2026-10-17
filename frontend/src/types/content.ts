@@ -30,6 +30,12 @@ export interface IntroTrack {
   startAt: number
 }
 
+/** First and last month of a job, "YYYY-MM", both included. */
+export interface MonthRange {
+  from: string
+  to: string
+}
+
 export interface ResumeEntry {
   title: string
   organization: string
@@ -37,8 +43,10 @@ export interface ResumeEntry {
   context?: string
   /** Free-form period, e.g. "2023 — сейчас". */
   period: string
+  /** Exact months, for the duration next to the period and the total experience. */
+  dates?: MonthRange
   /** Positions held inside one company, newest first. */
-  roles?: { title: string; period: string }[]
+  roles?: { title: string; period: string; dates?: MonthRange }[]
   points: string[]
   stack?: string[]
 }

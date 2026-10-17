@@ -1,25 +1,55 @@
 <script setup lang="ts">
+import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import BaseTag from '@/components/ui/BaseTag.vue'
-import type { ResumeEntry } from '@/types/content'
+import type { MonthRange, ResumeEntry } from '@/types/content'
+import { monthsIn, splitMonths, totalMonths } from '@/utils/duration'
 
-defineProps<{
+const props = defineProps<{
   title: string
   entries: ResumeEntry[]
+  /** Shows the combined length of all entries with dates under the title. */
+  showTotal?: boolean
 }>()
+
+const { t } = useI18n()
+
+/** "4 года 5 месяцев" / "4 yrs 5 mos". */
+function format(total: number) {
+  const { years, months } = splitMonths(total)
+  return [years && t('resume.years', years), months && t('resume.months', months)]
+    .filter(Boolean)
+    .join(' ')
+}
+
+const duration = (dates?: MonthRange) => (dates ? format(monthsIn(dates)) : null)
+
+const total = computed(() => {
+  const ranges = props.entries.flatMap((entry) => (entry.dates ? [entry.dates] : []))
+  return props.showTotal && ranges.length ? format(totalMonths(ranges)) : null
+})
 </script>
 
 <template>
   <section class="section">
-    <h2>{{ title }}</h2>
+    <header class="section-header">
+      <h2>{{ title }}</h2>
+      <p v-if="total" class="total">{{ $t('resume.total', { duration: total }) }}</p>
+    </header>
     <article v-for="entry in entries" :key="entry.title + entry.organization" class="entry">
       <header class="entry-header">
         <h3>{{ entry.title }} · {{ entry.organization }}</h3>
-        <span class="period">{{ entry.period }}</span>
+        <span class="period">
+          {{ entry.period }}<template v-if="entry.dates"> · {{ duration(entry.dates) }}</template>
+        </span>
       </header>
       <p v-if="entry.context" class="context">{{ entry.context }}</p>
       <ul v-if="entry.roles" class="roles">
         <li v-for="role in entry.roles" :key="role.title">
-          {{ role.title }} <span class="period">{{ role.period }}</span>
+          {{ role.title }}
+          <span class="period">
+            {{ role.period }}<template v-if="role.dates"> · {{ duration(role.dates) }}</template>
+          </span>
         </li>
       </ul>
       <ul v-if="entry.points.length" class="points">
@@ -37,6 +67,18 @@ defineProps<{
   display: flex;
   flex-direction: column;
   gap: 24px;
+}
+
+.section-header {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.total {
+  color: var(--color-text-muted);
+  font-family: var(--font-label);
+  font-size: 0.9rem;
 }
 
 .entry {

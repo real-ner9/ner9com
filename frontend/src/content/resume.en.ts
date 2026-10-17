@@ -1,10 +1,11 @@
 import type { Resume } from '@/types/content'
 
-// The owner's two CVs (Fullstack and Fullstack + Python/Claw) merged, in their own wording.
+// The owner's Fullstack CV, word for word. The own project and the marketplace contract come from
+// the Fullstack + Python (Claw) CV, which is the only one that lists them.
 // Mirrors resume.ru.ts entry for entry; keep both in step.
 export const resumeEn: Resume = {
   summary:
-    'Fullstack engineer with 8 years of commercial experience building web products end to end: Node.js, NestJS, Python (FastAPI), PHP (Laravel) and C# services on PostgreSQL, Redis and RabbitMQ, with React, Next.js, Vue and TypeScript on the frontend. Grew from frontend developer to fullstack team lead, then took on contract architecture work. I specialize in gradual legacy migrations: I dig into unfamiliar code, split the move into safe stages and ship it without downtime. Track record in caching, queues, payments and auth at tens of thousands of daily users. I use Claude Code every day for code, tests and refactoring.',
+    'Fullstack engineer with 8 years building web products end to end: Node.js, NestJS, PHP (Laravel) and C# services on PostgreSQL, Redis and RabbitMQ, with React, Vue and TypeScript on the frontend. Grew from frontend developer to fullstack team lead, then took on contract architecture work. Track record in caching, queues, payments, auth and zero-downtime migrations at tens of thousands of daily users.',
   experience: [
     {
       title: 'Fullstack Developer',
@@ -12,8 +13,7 @@ export const resumeEn: Resume = {
       context: 'Telegram bot and web game · Bangkok',
       period: '2026',
       points: [
-        'Python / FastAPI backend for a Telegram bot and a web game that lets players remotely play a real claw machine',
-        'Game frontend with Lottie animations (in progress)',
+        'Python / FastAPI backend for a Telegram bot and a web game that lets players remotely play a real claw machine; game frontend with Lottie animations (in progress)',
       ],
       stack: ['Python', 'FastAPI', 'Telegram Bot API', 'TypeScript', 'Lottie'],
     },
@@ -22,12 +22,13 @@ export const resumeEn: Resume = {
       organization: 'Teamatical',
       context: 'sportswear e-commerce, B2B/B2C · Bangkok',
       period: 'Jan 2026 – Sep 2026',
+      dates: { from: '2026-01', to: '2026-09' },
       points: [
-        'Led a gradual migration of the company CRM from Polymer to Lit: new shell over the old components, both versions live on one backend, staged rollout by department; ~95% of legacy removed, 100% of staff moved with zero downtime',
-        'Reverse-engineered a legacy deal configuration format (free-text pseudocode) and moved its logic in two safe steps: a structured UI on top of the old format, then the C# backend switched to JSON with field-level validation errors; configuration ~8.5x faster, no engineer in the loop',
-        'Extended the Node.js BFF layer over the C# backend on Azure: endpoints that aggregate backend data and save complex entities in one request instead of three',
+        'Replaced free-text pseudocode deal configuration with a structured UI and moved the C# backend to JSON with field-level validation errors: configuration ~8.5x faster, no engineer in the loop',
+        'Extended the Node.js BFF layer over the C# backend on Azure: built endpoints that aggregate backend data and save complex entities in one request instead of three',
+        'Led the CRM migration from Polymer to Lit: new shell over old components, both versions live on one backend, staged rollout by department; ~95% of legacy removed, 100% of staff moved, zero downtime',
         'Rebuilt checkout for ~50 US storefronts as a 3-step flow with server-side state: ~5–7% more completed payments after release',
-        'Made Claude Code the team standard: daily AI-assisted coding, refactoring and tests; trained 5+ engineers, set up MCP servers and AI code review in CI',
+        'Made Claude Code the team standard: trained 5+ engineers, set up MCP servers and AI code review in CI',
       ],
       stack: [
         'TypeScript',
@@ -48,6 +49,7 @@ export const resumeEn: Resume = {
       organization: 'Vade',
       context: 'CRM platform · Moscow',
       period: 'Sep 2025 – Jan 2026',
+      dates: { from: '2025-09', to: '2026-01' },
       points: [
         'Brought in as architect: rewrote the early CRM from scratch on React, TypeScript and FSD for 2 teams; documented the system with C4 diagrams',
         'Coordinated the backend team: NestJS services on PostgreSQL with migrations, rollback and seeds, plus a PHP backend; set code standards for both teams',
@@ -65,37 +67,45 @@ export const resumeEn: Resume = {
         'Redis',
         'BullMQ',
         'Docker',
-        'Linux',
         'GitHub Actions',
       ],
     },
     {
-      title: 'Frontend Developer (contract)',
-      organization: 'Marketplace',
-      context: 'European client · remote',
+      title: 'Frontend Developer',
+      organization: 'Contract project',
+      context: 'marketplace, European client',
       period: '2025',
       points: [
         'Multilingual SSR marketplace on Next.js: next-i18next with 4 locales, Core Web Vitals and bundle optimization',
       ],
-      stack: ['Next.js', 'React', 'TypeScript', 'next-i18next', 'SSR'],
+      stack: ['Next.js', 'next-i18next', 'SSR'],
     },
     {
       title: 'Team Lead, Fullstack',
       organization: 'European Legal Service (ELS24)',
       context: 'legal and telemedicine platforms · Moscow',
       period: 'Apr 2021 – Aug 2025',
+      dates: { from: '2021-04', to: '2025-08' },
       roles: [
-        { title: 'Team Lead, Fullstack', period: 'Jan 2023 – Aug 2025' },
-        { title: 'Frontend Developer', period: 'Apr 2021 – Dec 2022' },
+        {
+          title: 'Team Lead, Fullstack',
+          period: 'Jan 2023 – Aug 2025',
+          dates: { from: '2023-01', to: '2025-08' },
+        },
+        {
+          title: 'Frontend Developer',
+          period: 'Apr 2021 – Dec 2022',
+          dates: { from: '2021-04', to: '2022-12' },
+        },
       ],
       points: [
-        'Products with tens of thousands of daily users and 1–3k orders a day; grew from frontend developer to fullstack team lead: started the company-wide CRM alone and built a team of 4 around it, all 4 juniors promoted to middle',
+        'Grew from frontend developer to fullstack team lead: started the company-wide CRM alone and built a team of 4 around it; all 4 juniors promoted to middle',
         'Dashboard ~2 s to <300 ms and DB load on those queries down ~40%: tuned PostgreSQL queries, added Redis caching for dashboards, reference data and account lists',
         'Moved email and push notifications to RabbitMQ with retries: lost notifications ~2–3% to near zero, no more 3–5 s API stalls at peaks',
         'Automated webhook reconciliation for 300–800 payments a day, including quotas and trials (cron): ~90% fewer manual checks by support',
         'Built APIs on a Node.js layer over a Laravel backend with hand-written PostgreSQL queries for 1–3k orders a day: JWT, OAuth/OIDC, SMS OTP',
         'Rebuilt video consultations on plain WebRTC with Node.js signaling: usage took off, cost dropped to hosting',
-        'React and Vue: LCP ~4.8 s to ~2.3 s (p75, mobile), JS bundle ~1.4 MB to ~450 KB, builds 7 min to ~1 (Webpack to Vite); Jest tests cut regressions ~30%',
+        'LCP ~4.8 s to ~2.3 s (p75, mobile), JS bundle ~1.4 MB to ~450 KB; builds 7 min to ~1 (Webpack to Vite); Jest tests cut regressions ~30%',
       ],
       stack: [
         'Node.js',
@@ -117,9 +127,9 @@ export const resumeEn: Resume = {
       organization: 'RITS',
       context: 'mining systems · Novosibirsk',
       period: 'Mar 2020 – Feb 2021',
+      dates: { from: '2020-03', to: '2021-02' },
       points: [
-        'Reverse-engineered and rewrote the legacy filtering module of a Canvas quarry map: equipment search 60 s to 5 s (12x)',
-        'Refactored legacy Angular / NgRx, test coverage to 80%',
+        'Rewrote the Canvas quarry map filtering: equipment search 60 s to 5 s (12x); refactored legacy Angular / NgRx, test coverage to 80%',
       ],
       stack: ['Angular 8+', 'TypeScript', 'RxJS', 'NgRx', 'Canvas', 'Jasmine', 'Karma'],
     },
@@ -128,35 +138,27 @@ export const resumeEn: Resume = {
       organization: 'Freelance',
       context: 'remote',
       period: 'Aug 2018 – Feb 2020',
+      dates: { from: '2018-08', to: '2020-02' },
       points: [
-        'E-commerce storefronts end to end and dozens of landing pages; worked directly with clients',
-        'Migrated jQuery sites to React and Angular SPAs',
+        'E-commerce storefronts end to end and dozens of landing pages; jQuery sites migrated to React and Angular SPAs; worked directly with clients',
       ],
-      stack: ['JavaScript', 'jQuery', 'React', 'Angular', 'HTML', 'CSS'],
     },
   ],
   education: [
-    {
-      title: 'B.Sc. Computer Systems and Programming',
-      organization: 'NSU',
-      period: '2022',
-      points: [],
-    },
+    { title: 'B.Sc. Computer Systems', organization: 'NSU', period: '2022', points: [] },
     { title: 'Node.js', organization: 'Yandex', period: '2024', points: [] },
     { title: 'Focus Start', organization: 'CFT', period: '2021', points: [] },
   ],
-  // Union of both CVs; nothing dropped.
   skills: [
     {
       name: 'Languages',
-      items: ['TypeScript', 'JavaScript', 'Python', 'PHP', 'C#', 'SQL', 'HTML', 'CSS'],
+      items: ['TypeScript', 'JavaScript', 'PHP', 'C#', 'Python', 'SQL', 'HTML', 'CSS'],
     },
     {
       name: 'Backend',
       items: [
         'Node.js',
         'NestJS',
-        'FastAPI',
         'Laravel',
         'REST',
         'BFF',
@@ -164,17 +166,13 @@ export const resumeEn: Resume = {
         'Webhooks',
         'Cron',
         'Background jobs',
-        'JWT',
-        'OAuth / OIDC',
-        'OTP',
-        'Telegram Bot API',
+        'JWT / OAuth / OIDC / OTP',
       ],
     },
     {
-      name: 'Data & queues',
+      name: 'Data & messaging',
       items: [
         'PostgreSQL',
-        'SQL query optimization',
         'MySQL',
         'MongoDB',
         'Redis',
@@ -188,11 +186,10 @@ export const resumeEn: Resume = {
       name: 'Frontend',
       items: [
         'React',
-        'Next.js (SSR)',
+        'Next.js',
         'Vue 2/3',
         'Angular',
         'Lit',
-        'Polymer',
         'Web Components',
         'Redux',
         'Zustand',
@@ -200,32 +197,15 @@ export const resumeEn: Resume = {
         'NgRx',
         'RxJS',
         'WebRTC',
-        'Canvas',
-        'Lottie',
-        'next-i18next',
-        'Bundle optimization',
       ],
     },
     {
-      name: 'Infrastructure & quality',
-      items: [
-        'Linux',
-        'Docker',
-        'GitHub Actions',
-        'CI/CD',
-        'Azure',
-        'Jest',
-        'Jasmine',
-        'Karma',
-        'Vite',
-        'Webpack',
-        'Core Web Vitals',
-      ],
+      name: 'Infra & quality',
+      items: ['Docker', 'GitHub Actions', 'CI/CD', 'Azure', 'Jest', 'Vite', 'Webpack', 'Core Web Vitals'],
     },
     {
       name: 'Architecture & team',
       items: [
-        'Zero-downtime legacy migrations',
         'C4',
         'FSD',
         'SSR / SPA',
@@ -233,8 +213,6 @@ export const resumeEn: Resume = {
         'Mentoring',
         'Code review',
         'Claude Code',
-        'MCP',
-        'AI code review in CI',
       ],
     },
   ],

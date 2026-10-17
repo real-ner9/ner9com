@@ -21,7 +21,7 @@ const { profile, resume } = useContent()
     </header>
     <!-- Same order as the CVs: skills first, then experience. -->
     <SkillList :groups="resume.skills" />
-    <ResumeSection :title="$t('resume.experience')" :entries="resume.experience" />
+    <ResumeSection :title="$t('resume.experience')" :entries="resume.experience" show-total />
     <ResumeSection :title="$t('resume.education')" :entries="resume.education" />
     <section class="languages">
       <h2>{{ $t('resume.languages') }}</h2>
