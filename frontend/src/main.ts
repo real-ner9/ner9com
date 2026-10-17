@@ -8,12 +8,15 @@ import { createPinia } from 'pinia'
 import App from './App.vue'
 import router from './router'
 import { i18n } from './i18n'
+import { startVisitorSync } from './stores/visitorSync'
 
 const app = createApp(App)
 
 app.use(createPinia())
 app.use(router)
 app.use(i18n)
+// After pinia is installed: it reads and writes the stores.
+startVisitorSync()
 
 app.mount('#app')
 
