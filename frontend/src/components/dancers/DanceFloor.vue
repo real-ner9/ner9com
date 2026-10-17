@@ -3,19 +3,22 @@ import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import SpriteDancer from '@/components/dancers/SpriteDancer.vue'
 import { DANCE_ROWS, FL_CHAN, HELD_ROW, IDLE_ROW } from '@/components/dancers/sprites'
-import { useDancersStore } from '@/stores/dancers'
+import { MAX_DANCERS, useDancersStore } from '@/stores/dancers'
 import { usePlayerStore } from '@/stores/player'
 import { BeatClock, bassEnergy } from '@/utils/beatClock'
 import { capture } from '@/utils/pointer'
 
 /**
- * Two FL Chans (FL Studio's Fruity Dance) dancing to the player.
+ * FL Chans (FL Studio's Fruity Dance) dancing to the player: 1–4 of them, alternating left and
+ * right, each but the first hue-shifted, every other one mirrored.
  *
  * Wide desktops: big dancers standing in the empty side margins. Phones and narrow windows: small
- * dancers that can be dragged anywhere. The disco-ball button in the header turns them on and off.
+ * dancers that can be dragged anywhere. The disco-ball button in the header turns them on and off;
+ * the iPod's Fruity Dance menu sets how many and which move.
  */
 const dancersStore = useDancersStore()
-const { isEnabled } = storeToRefs(dancersStore)
+const { isEnabled, count, moves } = storeToRefs(dancersStore)
+const HUES = [0, 140, 260, 50]
 const player = usePlayerStore()
 const { isPlaying, currentTrack } = storeToRefs(player)
 
@@ -32,33 +35,45 @@ const viewport = reactive({ width: window.innerWidth, height: window.innerHeight
 const onResize = () => {
   viewport.width = window.innerWidth
   viewport.height = window.innerHeight
-  dragged.value = [null, null]
+  dragged.value = Array(MAX_DANCERS).fill(null)
 }
 
 const margin = computed(() => (viewport.width - CONTENT_WIDTH) / 2)
 const onBorders = computed(() => viewport.width >= 768 && margin.value - 32 >= MIN_MARGIN_DANCER)
-const width = computed(() => (onBorders.value ? Math.min(margin.value - 32, 300) : SMALL_WIDTH))
+/** Even dancers stand on the left, odd ones on the right; the left side gets the extra one. */
+const perSide = computed(() => Math.ceil(count.value / 2))
+const width = computed(() => {
+  if (!onBorders.value) return SMALL_WIDTH
+  // Stacked dancers share the margin's height.
+  const fitHeight = (viewport.height - 80) / perSide.value - 12
+  return Math.min(margin.value - 32, 300, (fitHeight * FL_CHAN.cellWidth) / FL_CHAN.cellHeight)
+})
 const height = computed(() => (width.value * FL_CHAN.cellHeight) / FL_CHAN.cellWidth)
 
 /** Positions set by dragging; null means "use the default spot". */
-const dragged = ref<({ x: number; y: number } | null)[]>([null, null])
+const dragged = ref<({ x: number; y: number } | null)[]>(Array(MAX_DANCERS).fill(null))
 
 function defaultPosition(index: number) {
+  const right = index % 2 === 1
+  const slot = Math.floor(index / 2)
   if (onBorders.value) {
-    const x =
-      index === 0
-        ? (margin.value - width.value) / 2
-        : viewport.width - (margin.value + width.value) / 2
-    return { x, y: (viewport.height - height.value) / 2 }
+    const x = right
+      ? viewport.width - (margin.value + width.value) / 2
+      : (margin.value - width.value) / 2
+    const onThisSide = right ? Math.floor(count.value / 2) : perSide.value
+    const column = onThisSide * height.value + (onThisSide - 1) * 12
+    return { x, y: (viewport.height - column) / 2 + slot * (height.value + 12) }
   }
-  // Phones: one in each bottom corner, standing on the player dock.
+  // Phones: in the bottom corners, standing on the player dock; extra dancers step inwards.
   const peek =
     parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--ipod-peek')) || 120
-  const x = index === 0 ? 8 : viewport.width - width.value - 8
+  const inset = 8 + slot * width.value * 0.7
+  const x = right ? viewport.width - width.value - inset : inset
   return { x, y: viewport.height - peek - height.value + 6 }
 }
 
-const positions = computed(() => [0, 1].map((i) => dragged.value[i] ?? defaultPosition(i)))
+const indices = computed(() => Array.from({ length: count.value }, (_, i) => i))
+const positions = computed(() => indices.value.map((i) => dragged.value[i] ?? defaultPosition(i)))
 
 // --- Dragging -------------------------------------------------------------------------------
 
@@ -91,13 +106,12 @@ function onPointerUp(event: PointerEvent) {
 
 const clock = new BeatClock()
 let frequencies: Uint8Array<ArrayBuffer> | null = null
-const pose = ref([
-  { row: IDLE_ROW, frame: 0 },
-  { row: IDLE_ROW, frame: 0 },
-])
+const pose = ref(Array.from({ length: MAX_DANCERS }, () => ({ row: IDLE_ROW, frame: 0 })))
 
-/** Deterministic "random" move per 2-bar segment, different for each dancer. */
+/** The dancer's chosen move, or a deterministic "random" one per 2-bar segment. */
 function moveFor(segment: number, dancer: number) {
+  const chosen = moves.value[dancer]
+  if (chosen && chosen !== 'auto') return chosen
   const hash = Math.abs(Math.sin(segment * 12.9898 + dancer * 78.233) * 43758.5453) % 1
   return DANCE_ROWS[Math.floor(hash * DANCE_ROWS.length)]
 }
@@ -123,7 +137,7 @@ function tick(now: number) {
     clock.update(dt, energy)
   }
 
-  const next = [0, 1].map((dancer) => {
+  const next = pose.value.map((_, dancer) => {
     if (holding.value === dancer)
       return { row: HELD_ROW, frame: Math.floor(idleTime * 10) % FRAMES }
     if (!isPlaying.value) return { row: IDLE_ROW, frame: Math.floor(idleTime * 6) % FRAMES }
@@ -199,8 +213,8 @@ onBeforeUnmount(() => {
         :row="pose[index].row"
         :frame="pose[index].frame"
         :width="width"
-        :hue="index === 1 ? 140 : 0"
-        :mirrored="index === 1"
+        :hue="HUES[index]"
+        :mirrored="index % 2 === 1"
       />
     </div>
   </template>
