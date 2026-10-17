@@ -20,6 +20,12 @@ export function canPlay(mimeType: string) {
   return result
 }
 
+/** The 160 px version of a cover URL, for lists and the mini player. */
+export function smallCover(url: string | null) {
+  if (!url) return null
+  return `${url}${url.includes('?') ? '&' : '?'}size=small`
+}
+
 export async function fetchAlbums(): Promise<MusicAlbum[]> {
   const { albums } = await apiGet<{ albums: MusicAlbum[] }>('/library/albums')
   return albums
@@ -33,12 +39,23 @@ export async function fetchAlbums(): Promise<MusicAlbum[]> {
     .filter((album) => album.trackCount > 0)
 }
 
-/** Every playable track of the library in one request. */
-export async function fetchAllTracks(): Promise<MusicTrack[]> {
-  const { tracks } = await apiGet<{ tracks: MusicTrack[] }>('/library/tracks')
+/**
+ * Every playable track of the library in one request. The response leaves out the URLs (it
+ * would repeat them 3 000+ times): the stream URL is rebuilt from id and version, the cover is
+ * the album's.
+ */
+export async function fetchAllTracks(albums: MusicAlbum[]): Promise<MusicTrack[]> {
+  const { tracks } = await apiGet<{ tracks: Omit<MusicTrack, 'streamUrl' | 'coverUrl'>[] }>(
+    '/library/tracks',
+  )
+  const covers = new Map(albums.map((album) => [album.id, album.coverUrl]))
   return tracks
     .filter((track) => canPlay(track.mimeType))
-    .map((track) => ({ ...withUrls(track), streamUrl: apiUrl(track.streamUrl) }))
+    .map((track) => ({
+      ...track,
+      streamUrl: apiUrl(`/library/stream/${track.id}${track.v ? `?v=${track.v}` : ''}`),
+      coverUrl: covers.get(track.albumId) ?? null,
+    }))
 }
 
 export async function fetchAlbumTracks(albumId: string): Promise<MusicTrack[]> {

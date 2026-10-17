@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { t } from '@/i18n'
 import { computed, provide, ref, watch, type Component } from 'vue'
+import { smallCover } from '@/api/library'
 import { storeToRefs } from 'pinia'
 import AlbumView from '@/components/ipod/views/AlbumView.vue'
 import AlbumsView from '@/components/ipod/views/AlbumsView.vue'
@@ -176,7 +177,7 @@ defineExpose({
             <img
               v-if="currentTrack?.coverUrl"
               class="screen__mini-cover"
-              :src="currentTrack.coverUrl"
+              :src="smallCover(currentTrack.coverUrl)!"
               alt=""
             />
             <span v-else class="screen__mini-cover screen__mini-cover--empty">♪</span>

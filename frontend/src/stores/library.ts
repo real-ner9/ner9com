@@ -64,7 +64,7 @@ export const useLibraryStore = defineStore('library', () => {
     allTracksRequest ??= (async () => {
       await loadAlbums()
       try {
-        const tracks = await fetchAllTracks()
+        const tracks = await fetchAllTracks(albums.value)
         const byAlbum: Record<string, MusicTrack[]> = {}
         for (const track of tracks) (byAlbum[track.albumId] ??= []).push(track)
         tracksByAlbum.value = { ...tracksByAlbum.value, ...byAlbum }

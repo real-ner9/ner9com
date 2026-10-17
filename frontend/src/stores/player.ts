@@ -8,6 +8,10 @@ const STORAGE_KEY = 'ner9-player'
 const MODES_KEY = 'ner9-player-modes'
 /** How often the position is written while playing, in seconds of playback. */
 const SAVE_EVERY_S = 2
+/** The next track's first bytes are fetched this long before the current one ends. */
+const PRELOAD_BEFORE_END_S = 15
+/** About Spotify's chunk: enough to start playing at once. */
+const PRELOAD_BYTES = 512 * 1024
 
 /** What was playing when the page was left, so a reload continues from the same spot. */
 export interface SavedSession {
@@ -151,6 +155,7 @@ export const usePlayerStore = defineStore('player', () => {
     audio.addEventListener('timeupdate', () => {
       currentTime.value = audio!.currentTime
       if (Math.abs(currentTime.value - savedTime) >= SAVE_EVERY_S) saveSession()
+      if (duration.value && duration.value - currentTime.value < PRELOAD_BEFORE_END_S) preloadNext()
     })
     audio.addEventListener('durationchange', () => {
       duration.value = Number.isFinite(audio!.duration) ? audio!.duration : 0
@@ -202,6 +207,21 @@ export const usePlayerStore = defineStore('player', () => {
   // A new track, the queue running out or play/pause is saved at once; the position follows
   // while playing.
   watch([currentTrack, wantsToPlay], saveSession)
+
+  // Like Spotify: fetch the start of the next track ahead of time, so the switch doesn't wait on
+  // the network (it warms the browser's and Cloudflare's caches).
+  let preloaded: string | null = null
+  function preloadNext() {
+    const next =
+      queue.value[currentIndex.value + 1] ?? (repeat.value === 'all' ? queue.value[0] : null)
+    if (!next || next === currentTrack.value || preloaded === next.streamUrl) return
+    preloaded = next.streamUrl
+    void fetch(next.streamUrl, { headers: { Range: `bytes=0-${PRELOAD_BYTES - 1}` } })
+      .then((response) => response.arrayBuffer())
+      .catch(() => {
+        // Just a head start; playback fetches it anyway.
+      })
+  }
 
   function loadCurrent(autoplay: boolean, startAt = 0) {
     const track = currentTrack.value

@@ -21,4 +21,6 @@ export interface MusicTrack {
   trackIndex: number
   /** Includes the codec where it matters, e.g. `audio/mp4; codecs="alac"`. */
   mimeType: string
+  /** File version; part of streamUrl so the file can be cached for good. */
+  v?: string
 }

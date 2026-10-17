@@ -2,6 +2,7 @@
 import { t } from '@/i18n'
 import { computed, inject } from 'vue'
 import { storeToRefs } from 'pinia'
+import { smallCover } from '@/api/library'
 import IpodList from '@/components/ipod/IpodList.vue'
 import { useListNav } from '@/components/ipod/useListNav'
 import { useLibraryStore } from '@/stores/library'
@@ -26,7 +27,7 @@ const items = computed(() =>
     id: album.id,
     label: album.name,
     sublabel: t('ipod.tracks', album.trackCount),
-    image: album.coverUrl,
+    image: smallCover(album.coverUrl),
     playing: album.id === playingAlbum.value?.id,
   })),
 )
