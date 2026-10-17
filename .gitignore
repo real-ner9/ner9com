@@ -36,7 +36,6 @@ jspm_packages
 .npm
 .lock-wscript
 profile-*
-profile*
 *clinic*
 *flamegraph*
 lib-cov
