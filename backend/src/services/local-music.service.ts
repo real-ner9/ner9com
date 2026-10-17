@@ -133,7 +133,11 @@ function titleFromFileName(fileName: string) {
 }
 
 async function readTags(trackPath: string): Promise<TrackTags> {
-  const cached = tagCache.get(trackPath)
+  // Keyed by size and mtime too: a file replaced under the same name (re-encoded, re-uploaded)
+  // gets its tags read again.
+  const { size, mtimeMs } = await fs.stat(trackPath)
+  const key = `${trackPath}:${size}:${mtimeMs}`
+  const cached = tagCache.get(key)
   if (cached) return cached
 
   const baseMime = AUDIO_MIME[extname(trackPath).toLowerCase()]
@@ -154,7 +158,7 @@ async function readTags(trackPath: string): Promise<TrackTags> {
   } catch {
     // Unreadable tags are not fatal: fall back to the file name.
   }
-  tagCache.set(trackPath, tags)
+  tagCache.set(key, tags)
   return tags
 }
 
@@ -191,7 +195,8 @@ async function findCover(albumPath: string): Promise<CoverSource | null> {
       source = { track: join(albumPath, firstTrack) }
   }
 
-  coverSourceCache.set(albumPath, source)
+  // "No cover" isn't remembered: during an upload the image arrives after the tracks.
+  if (source) coverSourceCache.set(albumPath, source)
   return source
 }
 
@@ -220,7 +225,8 @@ async function albumArtist(albumPath: string) {
   } catch {
     // No album.json (albums added by hand): clients fall back to the tracks' tags.
   }
-  artistCache.set(albumPath, artist)
+  // Same for a missing album.json, which an upload adds after the tracks.
+  if (artist) artistCache.set(albumPath, artist)
   return artist
 }
 
