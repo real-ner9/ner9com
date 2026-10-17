@@ -144,7 +144,8 @@ $themes: (
 }
 
 :root {
-  @include theme(apple);
+  // Default theme (stores/theme.ts DEFAULT_THEME, the fallback in index.html).
+  @include theme(fl);
 
   --content-width: 1100px;
   --gutter: 20px;

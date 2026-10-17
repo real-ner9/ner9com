@@ -15,7 +15,7 @@
         try {
           saved = localStorage.getItem('ner9-theme')
         } catch (e) {}
-        if (themes.indexOf(saved) < 0) saved = 'apple'
+        if (themes.indexOf(saved) < 0) saved = 'fl'
         document.documentElement.dataset.theme = saved
       })()
     </script>
@@ -60,7 +60,7 @@
         display: flex;
         margin: 0;
         font-family: var(--s-font);
-        font-size: clamp(64px, 22vw, 168px);
+        font-size: clamp(40px, 11.5vw, 128px);
         font-weight: 800;
         line-height: 1;
         letter-spacing: -0.05em;
@@ -98,6 +98,18 @@
       }
       .splash__logo span:nth-child(4) {
         animation-delay: 0.21s, -0.45s;
+      }
+      .splash__logo span:nth-child(5) {
+        animation-delay: 0.28s, -0.6s;
+      }
+      .splash__logo span:nth-child(6) {
+        animation-delay: 0.35s, -0.75s;
+      }
+      .splash__logo span:nth-child(7) {
+        animation-delay: 0.42s, -0.9s;
+      }
+      .splash__logo span:nth-child(8) {
+        animation-delay: 0.49s, -1.05s;
       }
       .splash__bar {
         position: absolute;
@@ -154,7 +166,9 @@
   </head>
   <body>
     <div id="splash" aria-hidden="true">
-      <p class="splash__logo"><span>N</span><span>E</span><span>R</span><span>9</span></p>
+      <p class="splash__logo">
+        <span>N</span><span>E</span><span>R</span><span>9</span><span>.</span><span>C</span><span>O</span><span>M</span>
+      </p>
       <div class="splash__bar"></div>
     </div>
     <div id="app"></div>

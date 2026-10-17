@@ -80,7 +80,7 @@ const ROWS: Track[] = [
       </div>
     </div>
     <div class="playlist__shade" />
-    <!-- Above the shade so it glows on the timeline and shows through the page window. -->
+    <!-- Above the shade so it glows on the timeline; the opaque page window hides it over content. -->
     <div class="playlist__playhead" :class="{ 'playlist__playhead--playing': isPlaying }" />
   </div>
 </template>
@@ -302,16 +302,21 @@ const ROWS: Track[] = [
     --row: 36px;
   }
 
-  // On phones the text spans the whole width, so the backdrop recedes further.
+  // On phones the page window covers almost everything and the Playlist shows through it, so the
+  // shade stays light enough to recognise the clips, and the playhead (it would cross the text)
+  // is left out.
   .playlist__ruler,
   .playlist__body {
-    filter: blur(2.5px);
+    filter: blur(0.6px);
   }
 
   .playlist__shade {
-    background: rgba(28, 35, 39, 0.8);
+    background: rgba(28, 35, 39, 0.35);
   }
 
+  .playlist__playhead {
+    display: none;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

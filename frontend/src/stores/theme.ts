@@ -20,13 +20,15 @@ export const THEMES: ThemeInfo[] = [
 const STORAGE_KEY = 'ner9-theme'
 const isThemeId = (value: unknown): value is ThemeId => THEMES.some((t) => t.id === value)
 
-/** Anything unknown falls back to Apple. */
+/** The theme a first visit gets; anything unknown falls back to it too. */
+export const DEFAULT_THEME: ThemeId = 'fl'
+
 function readSaved(): ThemeId {
   try {
     const value = localStorage.getItem(STORAGE_KEY)
-    return isThemeId(value) ? value : 'apple'
+    return isThemeId(value) ? value : DEFAULT_THEME
   } catch {
-    return 'apple'
+    return DEFAULT_THEME
   }
 }
 
