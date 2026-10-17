@@ -3,7 +3,9 @@
 The collection is nested (Artist/Album, Artist/Albums/Album, Album/CD1) and partly lossless; the
 backend reads one folder per album. This walks the source, flattens it into album folders,
 re-encodes lossless files (FLAC, Apple Lossless) to AAC 256 kbps .m4a, which every browser plays
-and is a fraction of the size, copies MP3 and AAC as they are, and keeps one cover per album.
+and is a fraction of the size, copies MP3 and AAC as they are (AAC remuxed so playback can start
+from the first request), and keeps one cover per album plus ready-made webp thumbnails
+(thumb-600 for Cover Flow, thumb-160 for lists) so the server never resizes images.
 Originals are never touched. Finished files are skipped, so it can be stopped and run again.
 
 Usage (ffmpeg and ffprobe on PATH, or FFMPEG_BIN pointing at their folder):
@@ -29,6 +31,7 @@ DISC = re.compile(r'^(cd|disc|disk)\s*\d+$', re.IGNORECASE)
 # Top-level folders that are not music.
 SKIP_TOP = ('Грин_Роберт_48_законов_власти',)
 COVER_NAMES = ('cover', 'folder', 'front')
+THUMB_SIZES = (600, 160)
 # "Deftones - iTunes Discography", "1.Kla$ - Дискография" -> the artist.
 DISCOGRAPHY = re.compile(r'\s*-\s*(itunes\s+)?(discography|дискография)$', re.IGNORECASE)
 
@@ -99,8 +102,17 @@ def convert(source_file: Path, target_dir: Path, prefix: str):
     lossy = ext == '.mp3' or (ext == '.m4a' and codec(source_file) == 'aac')
     target = target_dir / f'{stem}{ext if lossy else ".m4a"}'
     partial = target.with_name(target.name + '.part')
-    if lossy:
+    if ext == '.mp3':
         shutil.copyfile(source_file, partial)
+    elif lossy:
+        # AAC as is, but with the index (moov) moved to the front: browsers can start playing
+        # from the first request instead of fetching the end of the file first.
+        subprocess.run(
+            [FFMPEG, '-nostdin', '-v', 'error', '-y', '-i', str(source_file), '-map', '0:a:0',
+             '-map_metadata', '0', '-c', 'copy', '-movflags', '+faststart', '-f', 'mp4',
+             str(partial)],
+            check=True,
+        )
     else:
         subprocess.run(
             [FFMPEG, '-nostdin', '-v', 'error', '-y', '-i', str(source_file),
@@ -129,6 +141,23 @@ def cover(folder: Path, files, target_dir: Path):
     )
 
 
+def thumbnails(target_dir: Path):
+    """thumb-600.webp and thumb-160.webp, square, from the album's cover."""
+    covers = sorted(target_dir.glob('cover.*'))
+    if not covers:
+        return
+    for size in THUMB_SIZES:
+        thumb = target_dir / f'thumb-{size}.webp'
+        if thumb.exists() and thumb.stat().st_mtime >= covers[0].stat().st_mtime:
+            continue
+        subprocess.run(
+            [FFMPEG, '-nostdin', '-v', 'error', '-y', '-i', str(covers[0]), '-vf',
+             f'scale={size}:{size}:force_original_aspect_ratio=increase,crop={size}:{size}',
+             '-c:v', 'libwebp', '-quality', '80', '-frames:v', '1', str(thumb)],
+            capture_output=True,
+        )
+
+
 def main():
     sys.stdout.reconfigure(encoding='utf-8')  # album names are Cyrillic, Japanese…
     parser = argparse.ArgumentParser(description=__doc__.split('\n\n')[0])
@@ -149,6 +178,7 @@ def main():
         target_dir.mkdir(parents=True, exist_ok=True)
         write_album_info(target_dir, artist_of(folder, args.source))
         cover(folder, files, target_dir)
+        thumbnails(target_dir)
         tasks += [(file, target_dir, prefix) for file, prefix in files]
 
     done, failed = {'skip': 0, 'copy': 0, 'encode': 0}, []
