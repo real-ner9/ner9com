@@ -32,10 +32,18 @@ const SMALL_WIDTH = 84
 // --- Layout ---------------------------------------------------------------------------------
 
 const viewport = reactive({ width: window.innerWidth, height: window.innerHeight })
+// Phones resize the viewport's height whenever the browser bars slide in or out while
+// scrolling; dragged dancers stay where they were put (kept on screen). Only a width change
+// (rotation, a resized window) means a new layout and sends them back to their spots.
 const onResize = () => {
+  const widthChanged = window.innerWidth !== viewport.width
   viewport.width = window.innerWidth
   viewport.height = window.innerHeight
-  dragged.value = Array(MAX_DANCERS).fill(null)
+  dragged.value = widthChanged
+    ? Array(MAX_DANCERS).fill(null)
+    : dragged.value.map((spot) =>
+        spot && { x: spot.x, y: Math.min(spot.y, Math.max(viewport.height - height.value, 0)) },
+      )
 }
 
 const margin = computed(() => (viewport.width - CONTENT_WIDTH) / 2)
