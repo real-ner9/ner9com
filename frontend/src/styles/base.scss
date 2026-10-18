@@ -10,6 +10,13 @@
 
 // Always reserve the scrollbar's space, so the page window keeps the same width and position on
 // short pages (no scrollbar) and long ones.
+html,
+body {
+  // No rubber-band past the page ends: on iOS (Safari and Chrome, both WebKit) a hard flick
+  // pulled the page far up and left the fixed iPod and dock floating over empty background.
+  overscroll-behavior-y: none;
+}
+
 html {
   scrollbar-gutter: stable;
 }

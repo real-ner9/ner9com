@@ -166,55 +166,59 @@ function onKeydown(event: KeyboardEvent) {
   <!-- Phones: a glass dock across the bottom that the collapsed iPod rises out of. -->
   <div class="ipod-dock" :style="{ opacity: 1 - openness }" aria-hidden="true" />
 
-  <section
-    ref="sheetRef"
-    class="ipod-sheet"
-    :class="{ 'ipod-sheet--dragging': dragOffset !== null, 'ipod-sheet--open': isExpanded }"
-    :style="{ transform: `translateY(${offset}px)` }"
-    :aria-label="$t('ipod.player')"
-    @pointerdown="onPointerDown"
-    @pointermove="onPointerMove"
-    @pointerup="onPointerUp"
-    @pointercancel="onPointerCancel"
-  >
-    <div class="ipod-sheet__handle">
-      <span class="ipod-sheet__grip" />
-      <button
-        v-if="isExpanded"
-        type="button"
-        class="ipod-sheet__close"
-        data-no-drag
-        :aria-label="$t('ipod.collapse')"
-        @click="ipod.collapse"
-      >
-        ✕
-      </button>
-    </div>
-
-    <div class="ipod">
-      <div class="ipod__screen">
-        <IpodScreen
-          ref="screenRef"
-          :compact="!isExpanded"
-          :mini-opacity="1 - openness"
-          @expand="ipod.expand"
-        />
+  <!-- Clips the sheet to the screen: its hidden lower part must not count as page height (iOS
+       WebKit lets the page scroll down to a transformed fixed element's bottom edge). -->
+  <div class="ipod-layer">
+    <section
+      ref="sheetRef"
+      class="ipod-sheet"
+      :class="{ 'ipod-sheet--dragging': dragOffset !== null, 'ipod-sheet--open': isExpanded }"
+      :style="{ transform: `translateY(${offset}px)` }"
+      :aria-label="$t('ipod.player')"
+      @pointerdown="onPointerDown"
+      @pointermove="onPointerMove"
+      @pointerup="onPointerUp"
+      @pointercancel="onPointerCancel"
+    >
+      <div class="ipod-sheet__handle">
+        <span class="ipod-sheet__grip" />
+        <button
+          v-if="isExpanded"
+          type="button"
+          class="ipod-sheet__close"
+          data-no-drag
+          :aria-label="$t('ipod.collapse')"
+          @click="ipod.collapse"
+        >
+          ✕
+        </button>
       </div>
-      <!-- The collapsed sheet shows everything above this marker. -->
-      <span class="ipod__peek-end" data-peek-end />
 
-      <div class="ipod__wheel">
-        <IpodClickWheel
-          @scroll="screenRef?.scroll($event)"
-          @select="screenRef?.select()"
-          @menu="onMenu"
-          @next="player.next"
-          @previous="player.previous"
-          @play-pause="player.toggle"
-        />
+      <div class="ipod">
+        <div class="ipod__screen">
+          <IpodScreen
+            ref="screenRef"
+            :compact="!isExpanded"
+            :mini-opacity="1 - openness"
+            @expand="ipod.expand"
+          />
+        </div>
+        <!-- The collapsed sheet shows everything above this marker. -->
+        <span class="ipod__peek-end" data-peek-end />
+
+        <div class="ipod__wheel">
+          <IpodClickWheel
+            @scroll="screenRef?.scroll($event)"
+            @select="screenRef?.select()"
+            @menu="onMenu"
+            @next="player.next"
+            @previous="player.previous"
+            @play-pause="player.toggle"
+          />
+        </div>
       </div>
-    </div>
-  </section>
+    </section>
+  </div>
 </template>
 
 <style scoped lang="scss">
@@ -256,11 +260,11 @@ function onKeydown(event: KeyboardEvent) {
   --wheel-center: linear-gradient(180deg, #fbfbfc 0%, #e6e7ea 100%);
   --wheel-center-pressed: linear-gradient(180deg, #e9eaed 0%, #d7d8dc 100%);
   --wheel-center-rim: #b4b6bb;
-  position: fixed;
+  position: absolute;
   bottom: 0;
   left: 50%;
-  z-index: 50;
   margin-left: calc(var(--ipod-w) / -2);
+  pointer-events: auto;
   padding-bottom: max(env(safe-area-inset-bottom), 12px);
   transition: transform 0.38s cubic-bezier(0.25, 0.8, 0.3, 1);
   touch-action: none;
@@ -269,6 +273,14 @@ function onKeydown(event: KeyboardEvent) {
   &--dragging {
     transition: none;
   }
+}
+
+.ipod-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  overflow: hidden;
+  pointer-events: none;
 }
 
 // Sits above the device so it doesn't add to the collapsed height.
