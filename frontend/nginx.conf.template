@@ -32,6 +32,12 @@ server {
         try_files $uri =404;
     }
 
+    # nginx's mime.types has no .webmanifest.
+    location = /site.webmanifest {
+        default_type application/manifest+json;
+        add_header Cache-Control "no-cache";
+    }
+
     location / {
         add_header Cache-Control "no-cache";
         try_files $uri $uri/ /index.html;
