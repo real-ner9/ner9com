@@ -110,6 +110,10 @@ There is no music page. `components/ipod/IpodPlayer.vue` is rendered once in `Ap
 - Settings (iPod → Fruity Dance, `stores/dancers.ts`, key `ner9-dancers-settings`): on/off, 1–4 dancers, each with its own move (`moves`, one per slot; Fruity Dance → Dancer N) (alternating left/right, each extra one hue-shifted, odd ones mirrored; stacked in the margins, stepping inwards from the corners on phones) Each move is Auto (changes every 8 beats) or one fixed sprite row, standing in for the plugin's note-picked moves.
 - Layout: when each side margin (viewport − 1100 px content) leaves ≥150 px, big dancers stand in the margins; otherwise small (84 px) draggable dancers in the bottom corners, standing on the iPod dock. Dragged dancers keep their spot when only the viewport height changes (phone browser bars sliding while scrolling); a width change (rotation, resized window) sends them back. On by default everywhere; toggled from the header disco ball or the iPod menu, remembered in localStorage.
 
+## Icons and link previews
+
+`frontend/index.html` holds the Open Graph and Twitter tags (English, the CV summary as the description; crawlers don't run JS, so every page shares one card) and the icon links; `frontend/public` has `og-image.png` (1200×630), `favicon.ico` (32), `icon-192.png`, `icon-512.png` (also the maskable icon), `apple-touch-icon.png` (180) and `site.webmanifest`. The current images are placeholders made on 2026-10-18 (the NER9.COM / N9 logo in Exo 2 on the FL backdrop); the owner will send final artwork: replace the files, keeping names and sizes.
+
 ## Performance
 
 - `index.html` holds an inline theme bootstrap (mirrors `stores/theme.ts`; keep the theme list in sync) and the NER9.COM splash (logo in the header too) with per-theme colours; `main.ts` fades it out after the router is ready, kept at least 900 ms.
