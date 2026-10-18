@@ -4,7 +4,7 @@ export const en: Messages = {
   nav: {
     home: 'Home',
     projects: 'Projects',
-    resume: 'Resume',
+    resume: 'CV',
     clothes: 'Clothes',
     notFound: 'Page not found',
   },
@@ -30,11 +30,11 @@ export const en: Messages = {
   },
   home: {
     viewProjects: 'See projects',
-    resume: 'Resume',
+    resume: 'CV',
     music: '♪ Music',
     featuredEyebrow: '01 — In production',
     featuredTitle: 'Projects',
-    experience: 'Experience & resume →',
+    experience: 'Experience & CV →',
     stack: 'Stack',
   },
   projects: {
