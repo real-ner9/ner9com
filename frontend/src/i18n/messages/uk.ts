@@ -94,7 +94,7 @@ export const uk: Messages = {
     stack: 'Стек',
   },
   projects: {
-    eyebrow: 'У продакшені',
+    eyebrow: 'У продакшені та в розробці',
     title: 'Проєкти',
     rest: 'Решта — на GitHub',
     promo: 'Промокод',

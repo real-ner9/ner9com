@@ -5,7 +5,7 @@ import { profile } from './profile'
 import { resumeRu } from './resume.ru'
 import { resumeEn } from './resume.en'
 import { resumeUk } from './resume.uk'
-import { showcase } from './projects'
+import { projects, showcase } from './projects'
 
 const resume = { ru: resumeRu, uk: resumeUk, en: resumeEn } satisfies Record<Locale, unknown>
 
@@ -17,5 +17,6 @@ export function useContent() {
     profile: computed(() => profile[current.value]),
     resume: computed(() => resume[current.value]),
     showcase: computed(() => showcase[current.value]),
+    projects: computed(() => projects[current.value]),
   }
 }

@@ -4,7 +4,7 @@ import BaseButton from '@/components/ui/BaseButton.vue'
 import BaseTag from '@/components/ui/BaseTag.vue'
 import type { ShowcaseProject } from '@/types/content'
 
-// The big card for the main project: what it is, the stack, the link and a promo code to copy.
+// The big card for a project: what it is, the stack, the link and, if any, a promo code to copy.
 const props = defineProps<{ project: ShowcaseProject }>()
 
 const copied = ref(false)
@@ -23,7 +23,9 @@ async function copyCode() {
 <template>
   <article class="showcase panel" :data-title="`${project.name}.exe`">
     <div class="showcase__glow" aria-hidden="true" />
-    <p class="showcase__status"><span class="showcase__dot" />{{ project.status }}</p>
+    <p class="showcase__status">
+      <span class="showcase__dot" :class="{ 'showcase__dot--dev': project.inDevelopment }" />{{ project.status }}
+    </p>
     <h3 class="showcase__name">{{ project.name }}</h3>
     <p class="showcase__tagline">{{ project.tagline }}</p>
     <p class="showcase__description">{{ project.description }}</p>
@@ -100,6 +102,13 @@ async function copyCode() {
   background: var(--color-success);
   box-shadow: 0 0 0 0 var(--color-success);
   animation: live 1.8s ease-out infinite;
+}
+
+// Not live yet: a still, muted dot.
+.showcase__dot--dev {
+  background: var(--color-text-muted);
+  box-shadow: none;
+  animation: none;
 }
 
 @keyframes live {

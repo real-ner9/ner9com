@@ -79,4 +79,6 @@ export interface ShowcaseProject {
   promoCode?: string
   stack: string[]
   status: string
+  /** Not live yet: the status dot is grey and still instead of the pulsing "live" one. */
+  inDevelopment?: boolean
 }

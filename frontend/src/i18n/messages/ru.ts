@@ -91,7 +91,7 @@ export const ru = {
     stack: 'Стек',
   },
   projects: {
-    eyebrow: 'В продакшене',
+    eyebrow: 'В продакшене и в разработке',
     title: 'Проекты',
     rest: 'Остальное — на GitHub',
     promo: 'Промокод',

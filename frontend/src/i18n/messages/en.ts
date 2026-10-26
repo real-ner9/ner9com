@@ -92,7 +92,7 @@ export const en: Messages = {
     stack: 'Stack',
   },
   projects: {
-    eyebrow: 'In production',
+    eyebrow: 'Live and in development',
     title: 'Projects',
     rest: 'Everything else is on GitHub',
     promo: 'Promo code',

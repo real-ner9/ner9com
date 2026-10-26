@@ -5,8 +5,8 @@ import BaseButton from '@/components/ui/BaseButton.vue'
 import { computed } from 'vue'
 import { useContent } from '@/content'
 
-// The main project with its comments, then a link to everything else on GitHub.
-const { profile, showcase } = useContent()
+// Every project with its comments, the main one first, then a link to everything else on GitHub.
+const { profile, projects } = useContent()
 const github = computed(() => profile.value.contacts.find((contact) => contact.label === 'GitHub'))
 </script>
 
@@ -17,8 +17,10 @@ const github = computed(() => profile.value.contacts.find((contact) => contact.l
       <h1 class="page-title">{{ $t('projects.title') }}</h1>
     </header>
 
-    <ShowcaseCard :project="showcase" />
-    <ProjectComments :project="showcase.id" />
+    <template v-for="project in projects" :key="project.id">
+      <ShowcaseCard :project="project" />
+      <ProjectComments :project="project.id" />
+    </template>
 
     <p v-if="github" class="more">
       {{ $t('projects.rest') }}
