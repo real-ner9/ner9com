@@ -168,8 +168,8 @@ async function readTags(trackPath: string): Promise<TrackTags> {
   try {
     const { common, format } = await parseFile(trackPath, { duration: false, skipCovers: true })
     tags = {
-      title: common.title?.trim() || tags.title,
-      artist: common.artist?.trim() || null,
+      title: fixCyrillic(common.title?.trim()) || tags.title,
+      artist: fixCyrillic(common.artist?.trim()) || null,
       duration: format.duration ? Math.round(format.duration) : null,
       mimeType: mimeWithCodec(baseMime, format.codec),
       v: tags.v,
@@ -179,6 +179,19 @@ async function readTags(trackPath: string): Promise<TrackTags> {
   }
   tagCache.set(key, tags)
   return tags
+}
+
+const CP1251 = new TextDecoder('windows-1251')
+
+/**
+ * Old Russian MP3s carry tags written in Windows-1251 without saying so, which read as Latin-1:
+ * "Ìîé ñòèëü" is "Мой стиль". A Latin-1-only string with two accented letters in a row (which
+ * real titles like "Café" or "Beyoncé" don't have) is decoded again as Windows-1251.
+ */
+export function fixCyrillic(text: string | undefined) {
+  if (!text || /[^\u0000-\u00ff]/.test(text)) return text
+  if (!/[\u00c0-\u00ff\u00a8\u00b8]{2}/.test(text)) return text
+  return CP1251.decode(Uint8Array.from(text, (char) => char.charCodeAt(0)))
 }
 
 /**
