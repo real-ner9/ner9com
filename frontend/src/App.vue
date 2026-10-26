@@ -4,6 +4,7 @@ import AppFooter from '@/components/layout/AppFooter.vue'
 import DanceFloor from '@/components/dancers/DanceFloor.vue'
 import IpodPlayer from '@/components/ipod/IpodPlayer.vue'
 import FlPlaylist from '@/components/themes/FlPlaylist.vue'
+import { useIpodStore } from '@/stores/ipod'
 import { useThemeStore } from '@/stores/theme'
 import { storeToRefs } from 'pinia'
 import { computed, watchEffect } from 'vue'
@@ -11,6 +12,7 @@ import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
 
 const { theme } = storeToRefs(useThemeStore())
+const { isVisible: ipodVisible } = storeToRefs(useIpodStore())
 const route = useRoute()
 const { t } = useI18n()
 
@@ -35,7 +37,7 @@ watchEffect(() => {
     </main>
     <AppFooter />
     <DanceFloor />
-    <IpodPlayer />
+    <IpodPlayer v-if="ipodVisible" />
   </div>
 </template>
 

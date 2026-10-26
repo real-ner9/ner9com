@@ -62,6 +62,8 @@ onBeforeUnmount(() => {
   resizeObserver?.disconnect()
   window.removeEventListener('keydown', onKeydown)
   document.body.style.overflow = ''
+  // Hidden from the header: nothing peeks over the page any more.
+  document.documentElement.style.removeProperty('--ipod-peek')
 })
 
 // --- Dragging -------------------------------------------------------------------------------
@@ -236,6 +238,18 @@ function onKeydown(event: KeyboardEvent) {
   -webkit-backdrop-filter: saturate(180%) blur(20px);
   box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.08);
   pointer-events: none;
+
+  // iOS 26 Safari draws the page under its floating toolbar, below where fixed `bottom: 0`
+  // ends, so the page scrolled visibly under the iPod there. The dock reaches on under it.
+  &::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    right: 0;
+    left: 0;
+    height: 160px;
+    background: var(--dock-bg);
+  }
 }
 
 .ipod-backdrop {
@@ -349,6 +363,7 @@ function onKeydown(event: KeyboardEvent) {
 }
 
 .ipod__screen {
+  position: relative;
   aspect-ratio: 4 / 3;
   overflow: hidden;
   border: calc(var(--ipod-w) * 0.008) solid #1a1a1c;

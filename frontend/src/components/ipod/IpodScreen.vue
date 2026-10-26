@@ -210,10 +210,12 @@ defineExpose({
 
 <style scoped lang="scss">
 .screen {
+  // Pinned to the frame's inner box: as `height: 100%` of a box sized by aspect-ratio, iOS
+  // WebKit made it a few pixels taller than the frame, cutting off the last list row.
+  position: absolute;
+  inset: 0;
   display: flex;
   flex-direction: column;
-  width: 100%;
-  height: 100%;
   overflow: hidden;
   background: #fff;
   font-family: -apple-system, 'Helvetica Neue', Helvetica, Arial, sans-serif;

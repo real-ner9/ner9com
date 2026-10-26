@@ -1,13 +1,16 @@
 <script setup lang="ts">
+import { storeToRefs } from 'pinia'
 import { useContent } from '@/content'
+import { useIpodStore } from '@/stores/ipod'
 
 const { profile } = useContent()
+const { isVisible: ipodVisible } = storeToRefs(useIpodStore())
 
 const year = new Date().getFullYear()
 </script>
 
 <template>
-  <footer class="footer">
+  <footer class="footer" :class="{ 'footer--plain': !ipodVisible }">
     <div class="container footer__inner">
       <span>© {{ year }} {{ profile.name }}</span>
       <nav v-if="profile.contacts.length" class="footer__contacts">
@@ -34,6 +37,11 @@ const year = new Date().getFullYear()
      it, so its links sit above the iPod and its background runs to the bottom edge instead of
      leaving an empty strip. IpodPlayer sets --ipod-peek; +36px clears the grip above the device. */
   padding-bottom: calc(var(--ipod-peek, 140px) + 36px);
+}
+
+/* The visitor hid the iPod: an ordinary footer. */
+.footer--plain {
+  padding-bottom: env(safe-area-inset-bottom);
 }
 
 .footer__inner {

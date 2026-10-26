@@ -77,9 +77,9 @@ watch(
   display: flex;
   align-items: center;
   gap: 6px;
-  height: 11cqh;
-  min-height: 22px;
-  padding: 0 6px;
+  // At least one menu line high, taller when a row has a second line (an artist's album count).
+  min-height: max(22px, 11cqh);
+  padding: 0.12em 6px;
   color: #000;
   font-weight: 700;
   font-size: max(11px, 6.2cqh);
@@ -94,6 +94,7 @@ watch(
 .list--thumbs .list__row {
   height: 22cqh;
   min-height: 40px;
+  padding-block: 0;
   padding-left: 0;
 }
 

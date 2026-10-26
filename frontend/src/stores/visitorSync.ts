@@ -9,6 +9,7 @@ import {
   type RepeatMode,
   type SavedSession,
 } from '@/stores/player'
+import { useIpodStore } from '@/stores/ipod'
 import { THEMES, useThemeStore, type ThemeId } from '@/stores/theme'
 
 /**
@@ -21,6 +22,7 @@ interface VisitorState {
   theme: ThemeId
   locale: Locale
   dancers: DancerSettings
+  ipodVisible: boolean
   player: { shuffle: boolean; repeat: RepeatMode; session: SavedSession | null }
 }
 
@@ -57,12 +59,14 @@ export function startVisitorSync() {
   const theme = useThemeStore()
   const dancers = useDancersStore()
   const player = usePlayerStore()
+  const ipod = useIpodStore()
 
   const snapshot = (): VisitorState => ({
     savedAt: Date.now(),
     theme: theme.theme,
     locale: i18n.global.locale.value as Locale,
     dancers: dancers.snapshot(),
+    ipodVisible: ipod.isVisible,
     player: { shuffle: player.shuffle, repeat: player.repeat, session: player.session() },
   })
 
@@ -70,6 +74,7 @@ export function startVisitorSync() {
     if (THEMES.some((t) => t.id === state.theme)) theme.setTheme(state.theme!)
     if (LOCALES.includes(state.locale as Locale)) setLocale(state.locale!)
     if (state.dancers) dancers.apply(normalizeDancers(state.dancers))
+    if (typeof state.ipodVisible === 'boolean') ipod.setVisible(state.ipodVisible)
     const saved = state.player
     if (saved) {
       if (typeof saved.shuffle === 'boolean') player.shuffle = saved.shuffle
@@ -109,6 +114,7 @@ export function startVisitorSync() {
           theme.theme,
           i18n.global.locale.value,
           dancers.snapshot(),
+          ipod.isVisible,
           player.shuffle,
           player.repeat,
           player.currentTrack?.id,

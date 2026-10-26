@@ -1,4 +1,5 @@
 import { profile } from '@/content/profile'
+import { useIpodStore } from '@/stores/ipod'
 import { useLibraryStore } from '@/stores/library'
 import { readSavedSession, usePlayerStore } from '@/stores/player'
 import { visitorStateReady } from '@/stores/visitorSync'
@@ -52,7 +53,8 @@ export async function startIntroTrack() {
 
   // The backend may hold the track to resume (another browser profile, cleared storage).
   await Promise.all([library.loadAlbums(), visitorStateReady])
-  if (player.currentTrack) return
+  // The synced settings may say the visitor hid the player: no music then.
+  if (player.currentTrack || !useIpodStore().isVisible) return
   const cue = (await savedCue()) ?? (await introCue())
   if (!cue || player.currentTrack) return
 
