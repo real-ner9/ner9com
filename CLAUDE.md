@@ -47,7 +47,7 @@ utils/,"formatTime, plural, pointer capture, BeatClock, duration"
 ```
 
 - New page: file in `pages/`, route with `meta.titleKey` (i18n key; `App.vue` sets tab/window titles), nav link in `components/layout/AppHeader.vue`.
-- Routes: `/`, `/projects`, `/cv` (`/resume` redirects there — keep it), `/clothes`, 404. Don't bring back removed routes (`/music`, `/clicker`, `/game`, `/contest`, `/reviews`).
+- Routes: `/`, `/projects`, `/cv` (`/resume` redirects there — keep it), `/clothes`, 404. `/admin` is the owner's cheat sheet of deployed projects: no nav link (only the owner's account card links it), the list lives in `backend/src/services/ownerProjects.ts` and `GET /owner/projects` serves it to the owner's session only (404 for anyone else) — update it when a project moves. Don't bring back removed routes (`/music`, `/clicker`, `/game`, `/contest`, `/reviews`).
 - Three languages ru/uk/en. Every key goes into `messages/ru.ts`, `uk.ts`, `en.ts`. Every place with per-language text has all three: `content/`, `public/banned.html`, bot replies in `backend/src/services/telegram.ts`, the CV PDFs. No copy inside pages: components call `useContent()` / `$t()`.
 - Resume and home copy come word for word from `Desktop/CV/90+/Savva_Kashin_CV_Fullstack.pdf` (plus the Claw project and the 2025 marketplace contract from the second CV). Never paraphrase or add claims. `content/resume.en.ts` is the source, `resume.ru.ts`/`resume.uk.ts` translate it entry for entry — edit all three. Jobs carry `dates` as "YYYY-MM"; `utils/duration.ts` counts total experience (overlaps once). After editing resume/profile run `npm run cv` and commit the PDFs.
 - Never put files under `public/cv/`: nginx would serve that folder instead of the `/cv` page.

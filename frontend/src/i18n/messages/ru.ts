@@ -6,6 +6,7 @@ export const ru = {
     resume: 'Резюме',
     clothes: 'Одежда',
     notFound: 'Страница не найдена',
+    admin: 'Мои проекты',
   },
   reviews: {
     title: 'Комментарии',
@@ -65,6 +66,15 @@ export const ru = {
     title: 'Тема',
     current: 'Тема: {name}',
     change: 'Сменить тему',
+  },
+  admin: {
+    eyebrow: 'Только для тебя',
+    title: 'Мои проекты',
+    note: 'Всё, что задеплоено, и где оно живёт.',
+    loading: 'Загружаю…',
+    forbidden: 'Эта страница только для автора сайта. Войди через Telegram своим аккаунтом.',
+    deploy: 'Деплой',
+    status: { live: 'В проде', dev: 'В разработке', legacy: 'Легаси' },
   },
   auth: {
     signIn: 'Войти через Telegram',

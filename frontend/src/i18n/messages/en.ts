@@ -7,6 +7,7 @@ export const en: Messages = {
     resume: 'CV',
     clothes: 'Clothes',
     notFound: 'Page not found',
+    admin: 'My projects',
   },
   reviews: {
     title: 'Comments',
@@ -66,6 +67,15 @@ export const en: Messages = {
     title: 'Theme',
     current: 'Theme: {name}',
     change: 'Change theme',
+  },
+  admin: {
+    eyebrow: 'Just for you',
+    title: 'My projects',
+    note: 'Everything deployed, and where it lives.',
+    loading: 'Loading…',
+    forbidden: "This page is for the site's author only. Sign in with your Telegram account.",
+    deploy: 'Deploy',
+    status: { live: 'Live', dev: 'In development', legacy: 'Legacy' },
   },
   auth: {
     signIn: 'Sign in with Telegram',

@@ -8,6 +8,7 @@ export const uk: Messages = {
     resume: 'Резюме',
     clothes: 'Одяг',
     notFound: 'Сторінку не знайдено',
+    admin: 'Мої проєкти',
   },
   reviews: {
     title: 'Коментарі',
@@ -68,6 +69,15 @@ export const uk: Messages = {
     title: 'Тема',
     current: 'Тема: {name}',
     change: 'Змінити тему',
+  },
+  admin: {
+    eyebrow: 'Тільки для тебе',
+    title: 'Мої проєкти',
+    note: 'Усе, що задеплоєно, і де воно живе.',
+    loading: 'Завантажую…',
+    forbidden: 'Ця сторінка тільки для автора сайту. Увійди через Telegram своїм акаунтом.',
+    deploy: 'Деплой',
+    status: { live: 'У проді', dev: 'У розробці', legacy: 'Легасі' },
   },
   auth: {
     signIn: 'Увійти через Telegram',

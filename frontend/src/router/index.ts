@@ -35,6 +35,14 @@ const router = createRouter({
       component: () => import('@/pages/ClothesPage.vue'),
       meta: { titleKey: 'nav.clothes' },
     },
+    // The owner's cheat sheet of deployed projects; linked only from the owner's account card,
+    // and the backend serves the data to the owner alone.
+    {
+      path: '/admin',
+      name: 'admin',
+      component: () => import('@/pages/AdminPage.vue'),
+      meta: { titleKey: 'nav.admin' },
+    },
     {
       path: '/:pathMatch(.*)*',
       name: 'not-found',

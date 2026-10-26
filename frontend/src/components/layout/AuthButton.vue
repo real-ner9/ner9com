@@ -84,6 +84,9 @@ onBeforeUnmount(() => {
         >@{{ user.username }}</a
       >
       <span v-if="owner" class="account__badge">✓ {{ $t('reviews.owner') }}</span>
+      <RouterLink v-if="owner" to="/admin" class="account__username" @click="open = false">{{
+        $t('nav.admin')
+      }}</RouterLink>
       <button type="button" class="account__logout" @click="signOut">
         {{ $t('auth.signOut') }}
       </button>
