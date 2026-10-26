@@ -1,0 +1,312 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="robots" content="noindex" />
+    <meta name="theme-color" content="#1c2327" />
+    <link rel="icon" href="/favicon.ico" sizes="32x32" />
+    <title>👻 Banned · NER9</title>
+    <!--
+      Shown instead of every page to an IP banned for typing an SQL injection into the review
+      field (nginx serves it via /_ban_check; the SPA redirects here on a 403 { banned }).
+      Self-contained on purpose: a banned visitor gets none of the site's code. Its image lives in
+      /ban/, which nginx serves without the ban check (anything else would come back as this page). Unbanning is on
+      trust: Instagram can't tell a site who follows you.
+    -->
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #1c2327;
+        --panel: #2e393f;
+        --border: #11171a;
+        --text: #e2eaee;
+        --muted: #9fb0b8;
+        --accent: #ff8c1a;
+        --green: #9ccc3d;
+        --red: #ff5c5c;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+        min-height: 100%;
+        overscroll-behavior-y: none;
+      }
+      body {
+        display: grid;
+        place-items: center;
+        min-height: 100vh;
+        padding: 24px 16px;
+        background:
+          repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.18) 0 1px, transparent 1px 72px),
+          repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.2) 0 1px, transparent 1px 42px),
+          radial-gradient(ellipse at 50% 30%, #34424a, var(--bg) 70%);
+        color: var(--text);
+        font-family: 'Segoe UI', Inter, system-ui, -apple-system, sans-serif;
+      }
+      .window {
+        width: min(100%, 520px);
+        overflow: hidden;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        background: var(--panel);
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+      }
+      .titlebar {
+        display: flex;
+        justify-content: space-between;
+        padding: 0 12px;
+        border-bottom: 1px solid var(--border);
+        background: linear-gradient(180deg, #56636a, #3d484e);
+        color: #d6e0e5;
+        font: 600 11px/26px ui-monospace, Consolas, monospace;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+      .titlebar b {
+        color: var(--red);
+      }
+      .body {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 14px;
+        padding: 28px 24px 26px;
+        text-align: center;
+      }
+      .cat {
+        width: min(260px, 70vw);
+        height: auto;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        animation: shake 0.6s ease-in-out infinite alternate;
+      }
+      @keyframes shake {
+        to {
+          transform: rotate(-2deg) scale(1.03);
+        }
+      }
+      h1 {
+        margin: 0;
+        font-size: clamp(30px, 8vw, 42px);
+        letter-spacing: -0.02em;
+      }
+      .lead {
+        margin: 0;
+        font-size: 18px;
+        line-height: 1.45;
+      }
+      .log {
+        width: 100%;
+        margin: 4px 0 6px;
+        padding: 10px 12px;
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        background: #12171a;
+        color: var(--red);
+        font: 12px/1.5 ui-monospace, Consolas, monospace;
+        text-align: left;
+        overflow-wrap: anywhere;
+      }
+      .log span {
+        color: var(--muted);
+      }
+      .buttons {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        width: 100%;
+      }
+      .btn {
+        display: block;
+        width: 100%;
+        padding: 13px 16px;
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        background: linear-gradient(180deg, #56636a, #3e494f);
+        color: var(--text);
+        font-family: inherit;
+        font-size: 15px;
+        font-weight: 600;
+        line-height: 1.2;
+        text-decoration: none;
+        cursor: pointer;
+      }
+      .btn--insta {
+        border-color: #8a4300;
+        background: linear-gradient(180deg, #ffb35c, #ff8c1a 55%, #e9760a);
+        color: #1a1206;
+        box-shadow: 0 0 18px rgba(255, 140, 26, 0.35);
+      }
+      .btn--unban {
+        border-color: #4d6b16;
+        background: linear-gradient(180deg, #b9e06a, #9ccc3d 55%, #7fae22);
+        color: #10180a;
+      }
+      .btn:disabled {
+        cursor: not-allowed;
+        opacity: 0.45;
+        filter: grayscale(0.6);
+      }
+      .btn--sc {
+        border-color: #8a2e00;
+        background: linear-gradient(180deg, #ff8a3d, #ff5500 55%, #e04a00);
+        color: #1a0a02;
+        box-shadow: 0 0 18px rgba(255, 85, 0, 0.3);
+      }
+      /* A ticked follow button: done. */
+      .btn--done::after {
+        content: ' ✓';
+      }
+      .hint {
+        margin: 0;
+        color: var(--muted);
+        font-size: 13px;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="window">
+      <div class="titlebar"><span>ner9.com › security</span><b>● 403</b></div>
+      <div class="body">
+        <img class="cat" src="/ban/cat.jpg" alt="" width="260" height="257" />
+        <h1 data-text="title"></h1>
+        <p class="lead" data-text="lead"></p>
+        <div class="log" aria-hidden="true">
+          <span>$</span> INSERT INTO reviews …<br />
+          ERROR: nice try. IP banned.
+        </div>
+        <div class="buttons">
+          <a
+            id="insta"
+            class="btn btn--insta"
+            href="https://www.instagram.com/real_ner9/"
+            target="_blank"
+            rel="noopener"
+            data-text="insta"
+          ></a>
+          <a
+            id="soundcloud"
+            class="btn btn--sc"
+            href="https://soundcloud.com/real_ner9"
+            target="_blank"
+            rel="noopener"
+            data-text="soundcloud"
+          ></a>
+          <button id="unban" class="btn btn--unban" type="button" disabled></button>
+        </div>
+        <p id="hint" class="hint" data-text="hint"></p>
+      </div>
+    </main>
+
+    <script>
+      ;(function () {
+        var TEXT = {
+          ru: {
+            title: 'Попался, дурень?',
+            lead: 'Подписывайся на инстаграм и саундклауд для разбана 👻',
+            insta: 'Подписаться на Instagram',
+            soundcloud: 'Подписаться на SoundCloud',
+            unban: 'Разбаниться',
+            wait: 'Разбаниться через {s}…',
+            hint: 'Кнопка разбана включится, когда подпишешься на Instagram и SoundCloud.',
+            done: 'Разбаниваю…',
+            failed: 'Не получилось, попробуй ещё раз.',
+          },
+          uk: {
+            title: 'Попався, дурню?',
+            lead: 'Підписуйся на інстаграм і саундклауд для розбану 👻',
+            insta: 'Підписатися на Instagram',
+            soundcloud: 'Підписатися на SoundCloud',
+            unban: 'Розбанитися',
+            wait: 'Розбанитися через {s}…',
+            hint: 'Кнопка розбану ввімкнеться, коли підпишешся на Instagram і SoundCloud.',
+            done: 'Розбанюю…',
+            failed: 'Не вийшло, спробуй ще раз.',
+          },
+          en: {
+            title: 'Gotcha, dummy?',
+            lead: 'Follow my Instagram and SoundCloud to get unbanned 👻',
+            insta: 'Follow on Instagram',
+            soundcloud: 'Follow on SoundCloud',
+            unban: 'Unban me',
+            wait: 'Unban in {s}…',
+            hint: 'The unban button turns on once you follow on Instagram and SoundCloud.',
+            done: 'Unbanning…',
+            failed: "Didn't work, try again.",
+          },
+        }
+        // Same choice as the site (src/i18n): the saved language, else Ukrainian for uk, Russian
+        // for ru and neighbouring languages.
+        var RU = ['ru', 'be', 'kk', 'ky', 'uz', 'tg', 'hy', 'az', 'ka']
+        var lang = null
+        try {
+          lang = localStorage.getItem('ner9-locale')
+        } catch (e) {}
+        if (!TEXT[lang]) {
+          var browser = (navigator.language || 'en').slice(0, 2).toLowerCase()
+          lang = browser === 'uk' ? 'uk' : RU.indexOf(browser) >= 0 ? 'ru' : 'en'
+        }
+        var t = TEXT[lang]
+        document.documentElement.lang = lang
+        document.querySelectorAll('[data-text]').forEach(function (el) {
+          el.textContent = t[el.getAttribute('data-text')]
+        })
+
+        var WAIT_S = 5
+        var unban = document.getElementById('unban')
+        var hint = document.getElementById('hint')
+        unban.textContent = t.unban
+
+        // On trust (no site can check a follow): the button wakes up a few seconds after both the
+        // Instagram and the SoundCloud links were opened.
+        var followed = {}
+        ;['insta', 'soundcloud'].forEach(function (id) {
+          var link = document.getElementById(id)
+          link.addEventListener('click', function () {
+            followed[id] = true
+            link.classList.add('btn--done')
+            if (followed.insta && followed.soundcloud) startCountdown()
+          })
+        })
+
+        function startCountdown() {
+          if (!unban.disabled || unban.dataset.counting) return
+          unban.dataset.counting = '1'
+          var left = WAIT_S
+          var tick = function () {
+            if (left <= 0) {
+              unban.disabled = false
+              unban.textContent = t.unban
+              hint.textContent = ''
+              return
+            }
+            unban.textContent = t.wait.replace('{s}', left)
+            left -= 1
+            setTimeout(tick, 1000)
+          }
+          tick()
+        }
+
+        unban.addEventListener('click', function () {
+          unban.disabled = true
+          unban.textContent = t.done
+          fetch('/api/ban/unban', { method: 'POST' })
+            .then(function (response) {
+              if (!response.ok) throw new Error(String(response.status))
+              window.location.replace('/')
+            })
+            .catch(function () {
+              unban.disabled = false
+              unban.textContent = t.unban
+              hint.textContent = t.failed
+            })
+        })
+      })()
+    </script>
+  </body>
+</html>

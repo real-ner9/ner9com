@@ -2,6 +2,7 @@
 import NowPlayingChip from '@/components/home/NowPlayingChip.vue'
 import StackMarquee from '@/components/home/StackMarquee.vue'
 import ShowcaseCard from '@/components/projects/ShowcaseCard.vue'
+import ProjectComments from '@/components/reviews/ProjectComments.vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
 import { useContent } from '@/content'
 import { useIpodStore } from '@/stores/ipod'
@@ -19,7 +20,7 @@ const { profile, showcase } = useContent()
       <p class="hero__summary">{{ profile.summary }}</p>
       <div class="hero__actions">
         <BaseButton to="/projects" variant="primary">{{ $t('home.viewProjects') }}</BaseButton>
-        <BaseButton to="/resume">{{ $t('home.resume') }}</BaseButton>
+        <BaseButton to="/cv">{{ $t('home.resume') }}</BaseButton>
         <BaseButton @click="ipod.expand">{{ $t('home.music') }}</BaseButton>
       </div>
     </section>
@@ -32,9 +33,10 @@ const { profile, showcase } = useContent()
           <p class="eyebrow">{{ $t('home.featuredEyebrow') }}</p>
           <h2 class="featured__title">{{ $t('home.featuredTitle') }}</h2>
         </div>
-        <RouterLink to="/resume" class="featured__all">{{ $t('home.experience') }}</RouterLink>
+        <RouterLink to="/cv" class="featured__all">{{ $t('home.experience') }}</RouterLink>
       </header>
       <ShowcaseCard :project="showcase" />
+      <ProjectComments :project="showcase.id" collapsed />
     </section>
   </div>
 </template>

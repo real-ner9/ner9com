@@ -16,3 +16,88 @@ model VisitorState {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
+
+/// A review from the Reviews page ("SQL injection field (review)"). Published at once.
+model Review {
+  id             Int           @id @default(autoincrement())
+  /// Which of the owner's projects it is about (services/projects.ts).
+  project        String        @default("kleshnya") @db.VarChar(40)
+  name           String        @db.VarChar(40)
+  text           String        @db.VarChar(1000)
+  /// 1–5 stars.
+  rating         Int
+  /// Posted by the site's owner (signed in as OWNER_TELEGRAM_ID).
+  isOwner        Boolean       @default(false)
+  /// Signed in with Telegram when posting: their id, @username and avatar; null for anonymous.
+  authorTgId     String?       @db.VarChar(20)
+  authorUsername String?       @db.VarChar(64)
+  authorPhoto    String?       @db.VarChar(512)
+  createdAt      DateTime      @default(now())
+  images         ReviewImage[]
+  replies        Reply[]
+  votes          Vote[]
+
+  @@index([project, createdAt])
+}
+
+/// A reply under a review; isOwner marks the site owner's (signed in as OWNER_TELEGRAM_ID).
+model Reply {
+  id             Int           @id @default(autoincrement())
+  reviewId       Int
+  review         Review        @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  name           String        @db.VarChar(40)
+  text           String        @db.VarChar(1000)
+  isOwner        Boolean       @default(false)
+  /// Signed in with Telegram when posting: their id, @username and avatar; null for anonymous.
+  authorTgId     String?       @db.VarChar(20)
+  authorUsername String?       @db.VarChar(64)
+  authorPhoto    String?       @db.VarChar(512)
+  createdAt      DateTime      @default(now())
+  images         ReviewImage[]
+
+  @@index([reviewId])
+}
+
+/// An image attached to a review or a reply. Uploaded first (unattached, owned by its
+/// uploader), then attached when the review or reply is posted. The file lives in S3 under
+/// reviews/<id>.webp, with a reviews/<id>-480.webp thumbnail.
+model ReviewImage {
+  id        String   @id @db.Uuid
+  width     Int
+  height    Int
+  /// Visitor id (cookie) or IP of the uploader: only they can attach it.
+  uploader  String   @db.VarChar(64)
+  reviewId  Int?
+  review    Review?  @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  replyId   Int?
+  reply     Reply?   @relation(fields: [replyId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@index([reviewId])
+  @@index([replyId])
+}
+
+/// A like (1) or dislike (-1) on a review; one per visitor.
+model Vote {
+  id       Int    @id @default(autoincrement())
+  reviewId Int
+  review   Review @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  /// Visitor id (cookie) or IP.
+  voter    String @db.VarChar(64)
+  value    Int
+
+  @@unique([reviewId, voter])
+}
+
+/// An IP banned for typing an SQL injection into the review field. Lifted by the visitor
+/// ("follow on Instagram", on trust): unbannedAt is set and the row kept as history.
+model Ban {
+  id         Int       @id @default(autoincrement())
+  ip         String    @db.VarChar(64)
+  /// What they typed, cut to 500 characters.
+  input      String    @db.VarChar(500)
+  createdAt  DateTime  @default(now())
+  unbannedAt DateTime?
+
+  @@index([ip])
+}

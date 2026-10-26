@@ -11,8 +11,27 @@ export function apiUrl(path: string) {
   return `${apiBaseUrl}${path.startsWith('/') ? path : `/${path}`}`
 }
 
-export async function apiGet<T>(path: string, signal?: AbortSignal): Promise<T> {
-  return request<T>(path, { method: 'GET', signal })
+export async function apiGet<T>(
+  path: string,
+  signal?: AbortSignal,
+  headers?: Record<string, string>,
+): Promise<T> {
+  return request<T>(path, { method: 'GET', signal, headers })
+}
+
+/** Any method with a JSON body (or FormData, sent as is) and extra headers. */
+export async function apiSend<T>(
+  method: 'POST' | 'PUT' | 'DELETE',
+  path: string,
+  body?: unknown,
+  headers: Record<string, string> = {},
+): Promise<T> {
+  const isForm = body instanceof FormData
+  return request<T>(path, {
+    method,
+    headers: isForm || body === undefined ? headers : { 'Content-Type': 'application/json', ...headers },
+    body: isForm ? body : body === undefined ? undefined : JSON.stringify(body),
+  })
 }
 
 export async function apiPost<T>(path: string, body: unknown, signal?: AbortSignal): Promise<T> {
@@ -24,12 +43,38 @@ export async function apiPost<T>(path: string, body: unknown, signal?: AbortSign
   })
 }
 
+/** Where a banned visitor goes (nginx serves it for every page in production as well). */
+export const BANNED_PAGE = '/banned.html'
+
+/** Error with the HTTP status, so callers can tell a rate limit from a typo. */
+export class ApiError extends Error {
+  constructor(
+    message: string,
+    readonly status: number,
+  ) {
+    super(message)
+  }
+}
+
 async function request<T>(path: string, init: RequestInit): Promise<T> {
   const response = await fetch(apiUrl(path), init)
   if (!response.ok) {
-    throw new Error(await readErrorMessage(response))
+    if (response.status === 403 && (await isBanResponse(response.clone()))) {
+      window.location.assign(BANNED_PAGE)
+    }
+    throw new ApiError(await readErrorMessage(response), response.status)
   }
-  return response.json() as Promise<T>
+  // 204 No Content (deletes) has no body.
+  return (response.status === 204 ? undefined : response.json()) as Promise<T>
+}
+
+/** The backend answers { banned: true } for an IP banned for an SQL injection attempt. */
+async function isBanResponse(response: Response) {
+  try {
+    return (await response.json())?.banned === true
+  } catch {
+    return false
+  }
 }
 
 /** Fastify errors look like { message }; fall back to the status line. */

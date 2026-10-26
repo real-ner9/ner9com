@@ -14,6 +14,8 @@ server {
 
     # The backend has no /api prefix.
     location /api/ {
+        # Images attached to reviews are up to 10 MB (the backend's limit); nginx's default is 1 MB.
+        client_max_body_size 12m;
         rewrite ^/api/(.*)$ /$1 break;
         proxy_pass http://$backend;
         proxy_http_version 1.1;
@@ -32,6 +34,44 @@ server {
         try_files $uri =404;
     }
 
+    # IPs banned for an SQL injection in the review field get banned.html instead of any page
+    # (the backend's /ban/check answers 204 or 403 by the visitor's CF-Connecting-IP). If the
+    # backend is down, pages are let through rather than taking the site down with it.
+    location = /_ban_check {
+        internal;
+        proxy_pass http://$backend/ban/check;
+        proxy_pass_request_body off;
+        proxy_set_header Content-Length "";
+        proxy_set_header CF-Connecting-IP $http_cf_connecting_ip;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_intercept_errors on;
+        error_page 500 502 503 504 = @ban_check_unavailable;
+    }
+
+    location @ban_check_unavailable {
+        return 204;
+    }
+
+    location @banned {
+        rewrite ^ /banned.html break;
+        add_header Cache-Control "no-store" always;
+    }
+
+    location = /banned.html {
+        add_header Cache-Control "no-store";
+    }
+
+    # What banned.html itself needs, served without the ban check.
+    location ^~ /ban/ {
+        add_header Cache-Control "public, max-age=86400";
+        try_files $uri =404;
+    }
+
+    location = /favicon.ico {
+        add_header Cache-Control "public, max-age=86400";
+        try_files $uri =404;
+    }
+
     # nginx's mime.types has no .webmanifest.
     location = /site.webmanifest {
         default_type application/manifest+json;
@@ -39,6 +79,8 @@ server {
     }
 
     location / {
+        auth_request /_ban_check;
+        error_page 403 @banned;
         add_header Cache-Control "no-cache";
         try_files $uri $uri/ /index.html;
     }

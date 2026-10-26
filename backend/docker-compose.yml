@@ -1,4 +1,6 @@
-# Local Postgres for the backend. Credentials come from backend/.env.
+# Local services for the backend: Postgres (credentials from backend/.env) and SeaweedFS, the S3
+# for images attached to reviews. MinIO no longer publishes images, so new servers can't pull it.
+# The backend creates the bucket on startup and serves the images, so the bucket stays private.
 services:
   db:
     container_name: ner9-db
@@ -13,5 +15,24 @@ services:
     volumes:
       - postgres-data:/var/lib/postgresql/data
 
+  s3:
+    container_name: ner9-s3
+    image: chrislusf/seaweedfs:4.08
+    restart: unless-stopped
+    environment:
+      S3_ACCESS_KEY: ${S3_ACCESS_KEY:-ner9}
+      S3_SECRET_KEY: ${S3_SECRET_KEY:-ner9-local-secret}
+    # One identity with full access, written from the environment at start.
+    entrypoint: >
+      /bin/sh -c '
+      printf "{\"identities\":[{\"name\":\"ner9\",\"credentials\":[{\"accessKey\":\"%s\",\"secretKey\":\"%s\"}],\"actions\":[\"Admin\",\"Read\",\"Write\",\"List\",\"Tagging\"]}]}" "$$S3_ACCESS_KEY" "$$S3_SECRET_KEY" > /tmp/s3.json &&
+      exec weed server -dir=/data -s3 -s3.port=8333 -s3.config=/tmp/s3.json -volume.max=0
+      '
+    ports:
+      - "127.0.0.1:9010:8333"
+    volumes:
+      - s3-data:/data
+
 volumes:
   postgres-data:
+  s3-data:

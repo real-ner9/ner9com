@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import ShowcaseCard from '@/components/projects/ShowcaseCard.vue'
+import ProjectComments from '@/components/reviews/ProjectComments.vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
 import { computed } from 'vue'
 import { useContent } from '@/content'
 
-// The main project, then a link to everything else on GitHub.
+// The main project with its comments, then a link to everything else on GitHub.
 const { profile, showcase } = useContent()
 const github = computed(() => profile.value.contacts.find((contact) => contact.label === 'GitHub'))
 </script>
@@ -17,6 +18,7 @@ const github = computed(() => profile.value.contacts.find((contact) => contact.l
     </header>
 
     <ShowcaseCard :project="showcase" />
+    <ProjectComments :project="showcase.id" />
 
     <p v-if="github" class="more">
       {{ $t('projects.rest') }}

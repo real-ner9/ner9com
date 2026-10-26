@@ -67,6 +67,8 @@ export interface Resume {
 
 /** A hand-picked project shown above everything else (unlike the GitHub list, written by hand). */
 export interface ShowcaseProject {
+  /** Keys its comments (backend services/projects.ts lists the same ids). */
+  id: string
   name: string
   /** One line under the name. */
   tagline: string
