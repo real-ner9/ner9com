@@ -52,6 +52,14 @@ export const profile: Record<Locale, Profile> = {
     location: 'Бангкок, Таиланд',
     contacts: base.contacts({ phone: 'Телефон', channel: 'Telegram-канал' }),
   },
+  uk: {
+    ...base,
+    fullName: 'Савва Кашин',
+    summary:
+      'Fullstack-інженер, 8 років роблю вебпродукти повністю: сервіси на Node.js, NestJS, PHP (Laravel) і C# поверх PostgreSQL, Redis і RabbitMQ, на фронтенді React, Vue і TypeScript. Виріс із фронтенд-розробника до тімліда fullstack-команди, потім працював архітектором на контрактах.',
+    location: 'Бангкок, Таїланд',
+    contacts: base.contacts({ phone: 'Телефон', channel: 'Telegram-канал' }),
+  },
   en: {
     ...base,
     fullName: 'Savva Kashin',

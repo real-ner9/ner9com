@@ -9,6 +9,7 @@ const stack = ['Python', 'FastAPI', 'Telegram Bot API', 'TypeScript', 'Lottie']
 // The owner's main project, shown first on the home and projects pages.
 export const showcase: Record<Locale, ShowcaseProject> = {
   ru: {
+    id: 'kleshnya',
     name: 'Клешня',
     tagline: 'Настоящий автомат с клешнёй — в Telegram',
     description:
@@ -19,7 +20,20 @@ export const showcase: Record<Locale, ShowcaseProject> = {
     stack,
     status: 'В продакшене',
   },
+  uk: {
+    id: 'kleshnya',
+    name: 'Клішня',
+    tagline: 'Справжній автомат із клішнею — у Telegram',
+    description:
+      'Telegram-бот і вебгра, у якій ти віддалено граєш у реальний автомат із клішнею: керуєш справжньою клішнею просто з телефона. Проєкт повністю мій — від бекенду до ігрового інтерфейсу, і він уже в продакшені.',
+    url,
+    linkLabel: 'Грати в Telegram',
+    promoCode,
+    stack,
+    status: 'У продакшені',
+  },
   en: {
+    id: 'kleshnya',
     name: 'Kleshnya',
     tagline: 'A real claw machine, in Telegram',
     description:

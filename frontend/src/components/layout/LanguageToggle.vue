@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import { setLocale } from '@/i18n'
+import { LOCALES, setLocale, type Locale } from '@/i18n'
 
-// Header button flipping the site between Russian and English. It shows the current language.
+// Header button cycling the site language (Russian → Ukrainian → English). It shows the current one.
 const { locale } = useI18n()
 
 function toggle() {
-  setLocale(locale.value === 'ru' ? 'en' : 'ru')
+  const next = (LOCALES.indexOf(locale.value as Locale) + 1) % LOCALES.length
+  setLocale(LOCALES[next]!)
 }
 </script>
 
