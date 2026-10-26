@@ -1,4 +1,8 @@
 <script setup lang="ts">
+import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
+import type { Locale } from '@/i18n'
+import BaseButton from '@/components/ui/BaseButton.vue'
 import BaseTag from '@/components/ui/BaseTag.vue'
 import ResumeContacts from '@/components/resume/ResumeContacts.vue'
 import ResumeSection from '@/components/resume/ResumeSection.vue'
@@ -6,6 +10,15 @@ import SkillList from '@/components/resume/SkillList.vue'
 import { useContent } from '@/content'
 
 const { profile, resume } = useContent()
+const { locale } = useI18n()
+
+// This page printed in the CV layout; `npm run cv` rebuilds both files from `content/`.
+const PDFS: Record<Locale, { href: string; name: string }> = {
+  ru: { href: '/downloads/Kashin_Savva_CV_RU.pdf', name: 'Кашин_Савва_CV.pdf' },
+  uk: { href: '/downloads/Kashin_Savva_CV_UA.pdf', name: 'Кашин_Савва_CV_UA.pdf' },
+  en: { href: '/downloads/Savva_Kashin_CV.pdf', name: 'Savva_Kashin_CV.pdf' },
+}
+const pdf = computed(() => PDFS[locale.value as Locale])
 </script>
 
 <template>
@@ -17,6 +30,9 @@ const { profile, resume } = useContent()
         {{ profile.role }}<template v-if="profile.location"> · {{ profile.location }}</template>
       </p>
       <p class="intro__summary">{{ resume.summary }}</p>
+      <BaseButton class="intro__pdf" variant="primary" :href="pdf.href" :download="pdf.name">
+        {{ $t('resume.download') }}
+      </BaseButton>
       <ResumeContacts :contacts="profile.contacts" />
     </header>
     <!-- Same order as the CVs: skills first, then experience. -->
@@ -50,6 +66,10 @@ const { profile, resume } = useContent()
 .intro__summary {
   max-width: 72ch;
   color: var(--color-text-muted);
+}
+
+.intro__pdf {
+  align-self: flex-start;
 }
 
 .languages {

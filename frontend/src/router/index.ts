@@ -11,7 +11,8 @@ declare module 'vue-router' {
 // Pages other than home are lazy-loaded into their own chunks.
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
-  scrollBehavior: (_to, _from, saved) => saved ?? { top: 0 },
+  // A new page starts at the top; a query change on the same page keeps the scroll position.
+  scrollBehavior: (to, from, saved) => saved ?? (to.path === from.path ? false : { top: 0 }),
   routes: [
     { path: '/', name: 'home', component: HomePage },
     {
@@ -21,11 +22,13 @@ const router = createRouter({
       meta: { titleKey: 'nav.projects' },
     },
     {
-      path: '/resume',
-      name: 'resume',
+      path: '/cv',
+      name: 'cv',
       component: () => import('@/pages/ResumePage.vue'),
       meta: { titleKey: 'nav.resume' },
     },
+    // The page used to live at /resume; old links still land on it.
+    { path: '/resume', redirect: '/cv' },
     {
       path: '/clothes',
       name: 'clothes',
