@@ -74,7 +74,7 @@ export const ru = {
     loading: 'Загружаю…',
     forbidden: 'Эта страница только для автора сайта. Войди через Telegram своим аккаунтом.',
     deploy: 'Деплой',
-    status: { live: 'В проде', dev: 'В разработке', legacy: 'Легаси' },
+    status: { live: 'В проде', dev: 'В разработке' },
   },
   auth: {
     signIn: 'Войти через Telegram',

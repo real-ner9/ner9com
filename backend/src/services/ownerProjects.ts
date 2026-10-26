@@ -11,8 +11,8 @@ export interface OwnerProjectLink {
 export interface OwnerProject {
   name: string
   summary: string
-  /** live: in production · dev: deployed, still in development · legacy: kept running, not worked on. */
-  status: 'live' | 'dev' | 'legacy'
+  /** live: in production · dev: deployed, still in development. */
+  status: 'live' | 'dev'
   /** How a change gets there. */
   deploy: string
   links: OwnerProjectLink[]
@@ -72,37 +72,9 @@ export const OWNER_PROJECTS: OwnerProject[] = [
   {
     name: 'QuizLab (jquiz)',
     summary: 'Квизы. Деплой по старой схеме: CI заходит на сервер и собирает там.',
-    status: 'legacy',
+    status: 'live',
     deploy: 'Пуш в main → сборка на сервере',
     links: [{ label: 'Сайт', url: 'https://jquiz-207-180-218-99.sslip.io' }, repo('jquiz')]
-  },
-  {
-    name: 'Cadry (старый)',
-    summary: 'Прежняя веб-версия Cadry до мини-приложения. Автодеплой сломан.',
-    status: 'legacy',
-    deploy: 'Вручную',
-    links: [
-      { label: 'Сайт', url: 'https://cadry-207-180-218-99.sslip.io' },
-      { label: 'Dev', url: 'https://dev-cadry-207-180-218-99.sslip.io' },
-      repo('Cadry')
-    ]
-  },
-  {
-    name: 'AIDoll',
-    summary: 'Платформа знакомств.',
-    status: 'legacy',
-    deploy: 'Вручную',
-    links: [{ label: 'Сайт', url: 'https://aidoll-207-180-218-99.sslip.io' }, repo('AIDoll')]
-  },
-  {
-    name: 'Shop',
-    summary: 'Интернет-магазин на React.',
-    status: 'legacy',
-    deploy: 'Вручную',
-    links: [
-      { label: 'Сайт', url: 'https://shop-207-180-218-99.sslip.io' },
-      repo('React-ecommerce-platform')
-    ]
   },
   {
     name: 'Сервер',

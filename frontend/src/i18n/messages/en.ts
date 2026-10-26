@@ -75,7 +75,7 @@ export const en: Messages = {
     loading: 'Loading…',
     forbidden: "This page is for the site's author only. Sign in with your Telegram account.",
     deploy: 'Deploy',
-    status: { live: 'Live', dev: 'In development', legacy: 'Legacy' },
+    status: { live: 'Live', dev: 'In development' },
   },
   auth: {
     signIn: 'Sign in with Telegram',

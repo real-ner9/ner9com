@@ -77,7 +77,7 @@ export const uk: Messages = {
     loading: 'Завантажую…',
     forbidden: 'Ця сторінка тільки для автора сайту. Увійди через Telegram своїм акаунтом.',
     deploy: 'Деплой',
-    status: { live: 'У проді', dev: 'У розробці', legacy: 'Легасі' },
+    status: { live: 'У проді', dev: 'У розробці' },
   },
   auth: {
     signIn: 'Увійти через Telegram',

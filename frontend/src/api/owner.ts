@@ -9,7 +9,7 @@ export interface OwnerProjectLink {
 export interface OwnerProject {
   name: string
   summary: string
-  status: 'live' | 'dev' | 'legacy'
+  status: 'live' | 'dev'
   deploy: string
   links: OwnerProjectLink[]
 }
