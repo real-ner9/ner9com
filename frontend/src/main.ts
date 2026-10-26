@@ -21,7 +21,7 @@ startVisitorSync()
 app.mount('#app')
 
 // The splash from index.html stays at least this long so its animation doesn't just flicker.
-const SPLASH_MIN_MS = 900
+const SPLASH_MIN_MS = 1400
 
 void router.isReady().then(() => {
   const splash = document.getElementById('splash')
