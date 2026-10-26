@@ -84,6 +84,23 @@ export const useDancersStore = defineStore('dancers', () => {
     moves.value = moves.value.map((current, i) => (i === dancer ? move : current))
   }
 
+  /** One more dancer at the end, dancing Auto (the dancer's own right-click menu). */
+  function addDancer() {
+    if (count.value >= MAX_DANCERS) return
+    moves.value = moves.value.map((move, i) => (i === count.value ? 'auto' : move))
+    count.value += 1
+  }
+
+  /** Sends one dancer away; the ones after her move up a slot with their moves. */
+  function removeDancer(dancer: number) {
+    if (count.value <= 1) {
+      isEnabled.value = false
+      return
+    }
+    moves.value = [...moves.value.filter((_, i) => i !== dancer), 'auto']
+    count.value -= 1
+  }
+
   /** The settings as one object, for saving elsewhere (the backend). */
   const snapshot = (): DancerSettings => ({
     enabled: isEnabled.value,
@@ -97,5 +114,16 @@ export const useDancersStore = defineStore('dancers', () => {
     moves.value = [...value.moves]
   }
 
-  return { isEnabled, count, moves, toggle, cycleCount, setMove, snapshot, apply }
+  return {
+    isEnabled,
+    count,
+    moves,
+    toggle,
+    cycleCount,
+    setMove,
+    addDancer,
+    removeDancer,
+    snapshot,
+    apply,
+  }
 })

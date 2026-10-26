@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
+import DancerMenu from '@/components/dancers/DancerMenu.vue'
 import SpriteDancer from '@/components/dancers/SpriteDancer.vue'
 import { DANCE_ROWS, FL_CHAN, HELD_ROW, IDLE_ROW } from '@/components/dancers/sprites'
 import { MAX_DANCERS, useDancersStore } from '@/stores/dancers'
+import { useIpodStore } from '@/stores/ipod'
 import { usePlayerStore } from '@/stores/player'
 import { BeatClock, bassEnergy } from '@/utils/beatClock'
 import { capture } from '@/utils/pointer'
@@ -14,12 +16,14 @@ import { capture } from '@/utils/pointer'
  *
  * Wide desktops: big dancers standing in the empty side margins. Phones and narrow windows: small
  * dancers that can be dragged anywhere. The disco-ball button in the header turns them on and off;
- * the iPod's Fruity Dance menu sets how many and which move.
+ * the iPod's Fruity Dance menu sets how many and which move, and so does each dancer's own menu
+ * (right click, or a long press without moving on touch screens).
  */
 const dancersStore = useDancersStore()
 const { isEnabled, count, moves } = storeToRefs(dancersStore)
 const HUES = [0, 140, 260, 50]
 const player = usePlayerStore()
+const ipod = useIpodStore()
 const { isPlaying, currentTrack } = storeToRefs(player)
 
 const FRAMES = FL_CHAN.columns
@@ -72,9 +76,11 @@ function defaultPosition(index: number) {
     const column = onThisSide * height.value + (onThisSide - 1) * 12
     return { x, y: (viewport.height - column) / 2 + slot * (height.value + 12) }
   }
-  // Phones: in the bottom corners, standing on the player dock; extra dancers step inwards.
-  const peek =
-    parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--ipod-peek')) || 120
+  // Phones: in the bottom corners, standing on the player dock (or the screen edge when the
+  // player is hidden); extra dancers step inwards.
+  const peek = ipod.isVisible
+    ? parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--ipod-peek')) || 120
+    : 0
   const inset = 8 + slot * width.value * 0.7
   const x = right ? viewport.width - width.value - inset : inset
   return { x, y: viewport.height - peek - height.value + 6 }
@@ -83,20 +89,60 @@ function defaultPosition(index: number) {
 const indices = computed(() => Array.from({ length: count.value }, (_, i) => i))
 const positions = computed(() => indices.value.map((i) => dragged.value[i] ?? defaultPosition(i)))
 
-// --- Dragging -------------------------------------------------------------------------------
+// --- Dragging and the dancer's menu -------------------------------------------------------
+
+const LONG_PRESS_MS = 500
+/** A finger that moves further than this is dragging, not long-pressing. */
+const PRESS_SLOP = 8
 
 const holding = ref<number | null>(null)
+/** The dancer being long-pressed, lit up until her menu opens. */
+const pressing = ref<number | null>(null)
+const menu = ref<{ dancer: number; x: number; y: number } | null>(null)
 let grab: { index: number; pointerId: number; dx: number; dy: number } | null = null
+let press: { timer: number; x: number; y: number } | null = null
+
+function cancelPress() {
+  if (press) clearTimeout(press.timer)
+  press = null
+  pressing.value = null
+}
+
+function openMenu(dancer: number, x: number, y: number) {
+  cancelPress()
+  grab = null
+  holding.value = null
+  menu.value = { dancer, x, y }
+}
 
 function onPointerDown(index: number, event: PointerEvent) {
+  // The right button opens the menu (contextmenu) instead of dragging.
+  if (event.button === 2) return
   const { x, y } = positions.value[index]
   grab = { index, pointerId: event.pointerId, dx: event.clientX - x, dy: event.clientY - y }
   holding.value = index
   capture(event.currentTarget as Element, event.pointerId)
+  // Touch screens have no right click: holding still for a moment opens the menu.
+  if (event.pointerType !== 'mouse') {
+    cancelPress()
+    const { clientX, clientY } = event
+    press = {
+      x: clientX,
+      y: clientY,
+      timer: window.setTimeout(() => {
+        navigator.vibrate?.(12)
+        openMenu(index, clientX, clientY)
+      }, LONG_PRESS_MS),
+    }
+    pressing.value = index
+  }
 }
 
 function onPointerMove(event: PointerEvent) {
   if (!grab || event.pointerId !== grab.pointerId) return
+  if (press && Math.hypot(event.clientX - press.x, event.clientY - press.y) > PRESS_SLOP) {
+    cancelPress()
+  }
   const x = Math.min(Math.max(event.clientX - grab.dx, 0), viewport.width - width.value)
   const y = Math.min(Math.max(event.clientY - grab.dy, 0), viewport.height - height.value)
   const next = [...dragged.value]
@@ -105,10 +151,23 @@ function onPointerMove(event: PointerEvent) {
 }
 
 function onPointerUp(event: PointerEvent) {
+  cancelPress()
   if (!grab || event.pointerId !== grab.pointerId) return
   grab = null
   holding.value = null
 }
+
+function onContextMenu(index: number, event: MouseEvent) {
+  openMenu(index, event.clientX, event.clientY)
+}
+
+/** Sends a dancer away; the ones after her keep their dragged spots as they move up a slot. */
+function removeDancer(dancer: number) {
+  dragged.value = [...dragged.value.filter((_, i) => i !== dancer), null]
+  dancersStore.removeDancer(dancer)
+}
+
+watch([isEnabled, count], () => (menu.value = null))
 
 // --- Dancing --------------------------------------------------------------------------------
 
@@ -197,6 +256,7 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   stop()
+  cancelPress()
   window.removeEventListener('resize', onResize)
   document.removeEventListener('pointerdown', connectAnalyser, { capture: true })
   document.removeEventListener('keydown', connectAnalyser, { capture: true })
@@ -209,12 +269,16 @@ onBeforeUnmount(() => {
       v-for="(position, index) in positions"
       :key="index"
       class="dance-floor__dancer"
-      :class="{ 'dance-floor__dancer--held': holding === index }"
+      :class="{
+        'dance-floor__dancer--held': holding === index,
+        'dance-floor__dancer--pressing': pressing === index,
+      }"
       :style="{ transform: `translate(${position.x}px, ${position.y}px)` }"
       @pointerdown="onPointerDown(index, $event)"
       @pointermove="onPointerMove"
       @pointerup="onPointerUp"
       @pointercancel="onPointerUp"
+      @contextmenu.prevent="onContextMenu(index, $event)"
     >
       <SpriteDancer
         :sprite="FL_CHAN"
@@ -225,6 +289,15 @@ onBeforeUnmount(() => {
         :mirrored="index % 2 === 1"
       />
     </div>
+    <DancerMenu
+      v-if="menu"
+      :key="menu.dancer"
+      :dancer="menu.dancer"
+      :x="menu.x"
+      :y="menu.y"
+      @remove="removeDancer(menu.dancer)"
+      @close="menu = null"
+    />
   </template>
 </template>
 
@@ -238,10 +311,21 @@ onBeforeUnmount(() => {
   touch-action: none;
   user-select: none;
   -webkit-user-select: none;
+  -webkit-touch-callout: none;
   will-change: transform;
 
   &--held {
     cursor: grabbing;
+  }
+
+  // A long press lights her up, so it's clear the menu is about to open.
+  & > :deep(*) {
+    transition: filter 0.15s;
+  }
+
+  &--pressing > :deep(*) {
+    filter: drop-shadow(0 0 10px var(--color-accent));
+    transition: filter 0.5s ease-in;
   }
 }
 </style>
