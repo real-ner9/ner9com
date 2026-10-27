@@ -1,5 +1,5 @@
 /**
- * Prints the resume from `src/content` to PDF in the owner's CV layout (one column, Inter, bold
+ * Prints the resume from `src/content` (the LinkedIn profile) to PDF in the owner's CV layout (one column, Inter, bold
  * numbers): public/downloads/Savva_Kashin_CV.pdf, Kashin_Savva_CV_RU.pdf and Kashin_Savva_CV_UA.pdf,
  * the files behind the "Download PDF" button on /cv (not public/cv, which nginx would serve
  * instead of the page).
@@ -30,21 +30,24 @@ const CV_FILES: Record<Locale, string> = {
 // The CVs' own headline and section names (the site's role line is shorter).
 const LABELS = {
   en: {
-    headline: 'Senior Fullstack Engineer · TypeScript / Node.js / React',
+    headline:
+      'AI-First Senior Fullstack Engineer · React / Vue 3 / TypeScript · Node.js / NestJS · Python / FastAPI',
     summary: 'Summary',
     skills: 'Skills',
     experience: 'Experience',
     education: 'Education & languages',
   },
   ru: {
-    headline: 'Senior Fullstack-разработчик · TypeScript / Node.js / React',
+    headline:
+      'AI-First Senior Fullstack-разработчик · React / Vue 3 / TypeScript · Node.js / NestJS · Python / FastAPI',
     summary: 'О себе',
     skills: 'Навыки',
     experience: 'Опыт работы',
     education: 'Образование и языки',
   },
   uk: {
-    headline: 'Senior Fullstack-розробник · TypeScript / Node.js / React',
+    headline:
+      'AI-First Senior Fullstack-розробник · React / Vue 3 / TypeScript · Node.js / NestJS · Python / FastAPI',
     summary: 'Про себе',
     skills: 'Навички',
     experience: 'Досвід роботи',
@@ -53,18 +56,7 @@ const LABELS = {
 }
 
 // Bold in the summary, as in the CVs.
-const SUMMARY_BOLD = [
-  'Node.js',
-  'NestJS',
-  'PHP (Laravel)',
-  'C#',
-  'PostgreSQL',
-  'Redis',
-  'RabbitMQ',
-  'React',
-  'Vue',
-  'TypeScript',
-]
+const SUMMARY_BOLD = ['AI-First', '7+', 'LegalTech', 'iGaming', 'FinTech', 'EPAM']
 
 const escape = (text: string) =>
   text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
@@ -108,12 +100,16 @@ function render(locale: Locale, resume: Resume) {
         ? `<b>${escape(job.organization)}</b>`
         : `<b>${escape(job.organization)}</b> · ${escape(job.title)}`
       const roles = (job.roles ?? [])
-        .map((role) => `<div class="row role"><span>${escape(role.title)}</span><span class="date">${escape(role.period)}</span></div>`)
+        .map(
+          (role) =>
+            `<div class="row role"><span>${escape(role.title)}</span><span class="date">${escape(role.period)}</span></div>`,
+        )
         .join('')
       return `
         <div class="job">
           <div class="row"><span>${head}${job.context ? ` <span class="muted">· ${escape(job.context)}</span>` : ''}</span><span class="date">${escape(job.period)}</span></div>
           ${roles}
+          ${job.about ? `<p class="about">${escape(job.about).replace(/\n/g, '<br>')}</p>` : ''}
           <ul>${job.points.map((point) => `<li>${boldFigures(escape(point))}</li>`).join('')}</ul>
           ${job.stack ? `<div class="stack">${job.stack.map(escape).join(' · ')}</div>` : ''}
         </div>`
@@ -162,6 +158,7 @@ function render(locale: Locale, resume: Resume) {
   .role { font-weight: 600; }
   .date { color: #888; white-space: nowrap; }
   .muted { color: #888; }
+  .about { color: #444; margin: 1px 0 2px; }
   ul { list-style: none; }
   li { position: relative; padding-left: 9px; }
   li::before { content: '•'; position: absolute; left: 0; }

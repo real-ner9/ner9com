@@ -6,15 +6,21 @@ function monthIndex(month: string) {
   return year * 12 + (value - 1)
 }
 
+/** The current month, "YYYY-MM": where a job without an end date runs to. */
+function thisMonth() {
+  const now = new Date()
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
+}
+
 /** Length of a range in months, both ends included (Jan–Sep = 9), like LinkedIn counts it. */
 export function monthsIn(range: MonthRange) {
-  return monthIndex(range.to) - monthIndex(range.from) + 1
+  return monthIndex(range.to ?? thisMonth()) - monthIndex(range.from) + 1
 }
 
 /** Total months covered by the ranges: overlapping jobs count once, gaps don't count. */
 export function totalMonths(ranges: MonthRange[]) {
   const sorted = ranges
-    .map((range) => [monthIndex(range.from), monthIndex(range.to)])
+    .map((range) => [monthIndex(range.from), monthIndex(range.to ?? thisMonth())])
     .sort((a, b) => a[0] - b[0])
   let total = 0
   let covered = -Infinity

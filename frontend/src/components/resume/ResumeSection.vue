@@ -44,6 +44,7 @@ const total = computed(() => {
         </span>
       </header>
       <p v-if="entry.context" class="context">{{ entry.context }}</p>
+      <p v-if="entry.about" class="about">{{ entry.about }}</p>
       <ul v-if="entry.roles" class="roles">
         <li v-for="role in entry.roles" :key="role.title">
           {{ role.title }}
@@ -104,6 +105,12 @@ const total = computed(() => {
 .context {
   color: var(--color-text-muted);
   font-size: 0.9rem;
+}
+
+.about {
+  color: var(--color-text);
+  line-height: 1.55;
+  white-space: pre-line;
 }
 
 .roles {
