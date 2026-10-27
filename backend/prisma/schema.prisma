@@ -89,6 +89,17 @@ model Vote {
   @@unique([reviewId, voter])
 }
 
+/// A like on one of the owner's projects (the heart under its card); one per visitor.
+model ProjectLike {
+  id        Int      @id @default(autoincrement())
+  project   String   @db.VarChar(40)
+  /// Visitor id (cookie) or IP.
+  voter     String   @db.VarChar(64)
+  createdAt DateTime @default(now())
+
+  @@unique([project, voter])
+}
+
 /// An IP banned for typing an SQL injection into the review field. Lifted by the visitor
 /// ("follow on Instagram", on trust): unbannedAt is set and the row kept as history.
 model Ban {

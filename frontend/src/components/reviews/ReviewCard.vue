@@ -9,7 +9,7 @@ import KeefRating from '@/components/reviews/KeefRating.vue'
 import PostAuthor from '@/components/reviews/PostAuthor.vue'
 import type { Review, ReviewImage } from '@/types/review'
 
-// One review: rating in Chief Keefs, text, images, likes/dislikes, replies and a reply form. The
+// One comment in the sheet, as a flat row (no card): rating in Chief Keefs, text, images, likes/dislikes, replies and a reply form. The
 // reply field is an injection trap too (the backend bans on it). Delete shows on the visitor's
 // own posts (signed in with Telegram) and, for the owner, on every post.
 const props = defineProps<{
@@ -83,6 +83,9 @@ async function sendReply() {
   }
 }
 
+// Replies fold behind "Show replies" once there are more than two.
+const showReplies = ref(props.review.replies.length <= 2)
+
 const canDelete = (post: { author: { mine: boolean } }) => props.owner || post.author.mine
 
 async function remove(kind: 'review' | 'reply', id: number) {
@@ -92,10 +95,10 @@ async function remove(kind: 'review' | 'reply', id: number) {
 </script>
 
 <template>
-  <li class="card panel review" :data-title="review.name">
+  <li class="review">
     <header class="review__head">
       <PostAuthor :name="review.name" :author="review.author" :is-owner="review.isOwner" />
-      <KeefRating :value="review.rating" :size="26" />
+      <KeefRating :value="review.rating" :size="18" />
     </header>
     <p class="review__text">{{ review.text }}</p>
     <ImageGrid :images="review.images" />
@@ -135,7 +138,15 @@ async function remove(kind: 'review' | 'reply', id: number) {
       </span>
     </footer>
 
-    <ul v-if="review.replies.length" class="replies">
+    <button
+      v-if="review.replies.length && !showReplies"
+      type="button"
+      class="link review__more"
+      @click="showReplies = true"
+    >
+      — {{ $t('reviews.showReplies', { n: review.replies.length }) }}
+    </button>
+    <ul v-if="review.replies.length && showReplies" class="replies">
       <li v-for="reply in review.replies" :key="reply.id" class="reply" :class="{ 'reply--owner': reply.isOwner }">
         <header class="reply__head">
           <PostAuthor :name="reply.name" :author="reply.author" :is-owner="reply.isOwner" />
@@ -192,7 +203,19 @@ async function remove(kind: 'review' | 'reply', id: number) {
 .review {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.review:last-child {
+  border-bottom: none;
+}
+
+.review__more {
+  align-self: flex-start;
+  padding: 0;
+  color: var(--color-text-muted);
 }
 
 .review__head,
@@ -299,7 +322,8 @@ async function remove(kind: 'review' | 'reply', id: number) {
   border-radius: var(--radius-sm);
   background: var(--color-surface-alt);
   color: var(--color-text);
-  font-size: 14px;
+  /* 16px keeps iOS from zooming into the field. */
+  font-size: 16px;
 }
 
 .input:focus {

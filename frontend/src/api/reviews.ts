@@ -63,6 +63,9 @@ export const vote = (reviewId: number, value: -1 | 0 | 1) =>
     { value },
   )
 
+export const likeProject = (project: ReviewProject, liked: boolean) =>
+  apiSend<{ likes: number; liked: boolean }>('POST', '/reviews/likes', { project, liked })
+
 export const deleteReview = (reviewId: number) =>
   apiSend<void>('DELETE', `/reviews/${reviewId}`)
 

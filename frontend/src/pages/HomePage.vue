@@ -36,7 +36,7 @@ const { profile, showcase } = useContent()
         <RouterLink to="/cv" class="featured__all">{{ $t('home.experience') }}</RouterLink>
       </header>
       <ShowcaseCard :project="showcase" />
-      <ProjectComments :project="showcase.id" collapsed />
+      <ProjectComments :project="showcase.id" />
     </section>
   </div>
 </template>

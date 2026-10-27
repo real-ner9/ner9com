@@ -50,6 +50,9 @@ export interface ReviewList {
   /** Null while there are no reviews. */
   average: number | null
   count: number
+  /** Hearts on the project itself, and whether this visitor gave one. */
+  likes: number
+  liked: boolean
   /** False when the server has no S3: image upload is hidden. */
   uploads: boolean
   /** Signed in as the site's owner: delete buttons everywhere. */

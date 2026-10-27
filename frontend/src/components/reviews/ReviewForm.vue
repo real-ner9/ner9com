@@ -1,16 +1,16 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, nextTick, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { ApiError } from '@/api/http'
 import { postReview } from '@/api/reviews'
 import ImagePicker from '@/components/reviews/ImagePicker.vue'
 import KeefRating from '@/components/reviews/KeefRating.vue'
 import TelegramLogin from '@/components/reviews/TelegramLogin.vue'
-import BaseButton from '@/components/ui/BaseButton.vue'
 import { useAuthStore } from '@/stores/auth'
 import type { ReviewImage, ReviewProject } from '@/types/review'
 
-// The comment form under a project. The text field is labelled "SQL injection field": a real
+// The comment form at the bottom of a project's comments sheet: one line with a send button, like
+// Instagram's; focusing it unfolds the rest (name, rating, image, the example). The text field is labelled "SQL injection field": a real
 // comment is published at once, an injection attempt gets the visitor's IP banned (backend
 // routes/reviews) and the API client sends them to banned.html. Signed in with Telegram, the
 // account's name is used instead of the name field.
@@ -28,6 +28,23 @@ const rating = ref(5)
 const images = ref<ReviewImage[]>([])
 const sending = ref(false)
 const message = ref<{ kind: 'success' | 'error'; text: string } | null>(null)
+// The extra fields show once the visitor starts writing.
+const expanded = ref(false)
+const field = ref<HTMLTextAreaElement>()
+
+// The text field grows with its text, up to a few lines, then scrolls.
+function fit() {
+  const el = field.value
+  if (!el) return
+  el.style.height = 'auto'
+  el.style.height = `${Math.min(el.scrollHeight, 140)}px`
+}
+
+async function pasteExample() {
+  text.value = EXAMPLE_INJECTION
+  await nextTick()
+  fit()
+}
 
 // Empty fields are pointed out on send (and cleared as soon as they're filled in).
 const tried = ref(false)
@@ -53,6 +70,9 @@ async function send() {
     text.value = ''
     images.value = []
     tried.value = false
+    expanded.value = false
+    await nextTick()
+    fit()
     message.value = { kind: 'success', text: t('reviews.thanks') }
     emit('posted')
   } catch (error) {
@@ -71,68 +91,122 @@ async function send() {
 </script>
 
 <template>
-  <section class="card panel form" :data-title="$t('reviews.formTitle')">
-    <TelegramLogin />
-
-    <label v-if="!auth.user" class="field">
-      <span class="field__label">{{ $t('reviews.name') }}</span>
+  <form class="composer" @submit.prevent="send">
+    <div v-if="expanded" class="composer__extra">
+      <TelegramLogin />
       <input
+        v-if="!auth.user"
         v-model="name"
         class="input"
         :class="{ 'input--invalid': errors.name }"
         :aria-invalid="Boolean(errors.name)"
+        :aria-label="$t('reviews.name')"
         maxlength="40"
         :placeholder="$t('reviews.namePlaceholder')"
         autocomplete="nickname"
       />
       <span v-if="errors.name" class="field__error">{{ errors.name }}</span>
-    </label>
-
-    <div class="field">
-      <span class="field__label">{{ $t('reviews.rating') }}</span>
-      <KeefRating v-model:value="rating" :size="46" editable />
+      <div class="composer__rating">
+        <span class="field__label">{{ $t('reviews.rating') }}</span>
+        <KeefRating v-model:value="rating" :size="28" editable />
+      </div>
+      <button type="button" class="example" @click="pasteExample">
+        <code>{{ EXAMPLE_INJECTION }}</code> ← {{ $t('reviews.example') }}
+      </button>
+      <ImagePicker v-if="uploads" v-model="images" />
     </div>
 
-    <label class="field">
-      <span class="field__label">{{ $t('reviews.field') }}</span>
+    <div class="composer__row">
+      <img v-if="auth.user?.photoUrl" class="composer__avatar" :src="auth.user.photoUrl" alt="" />
       <textarea
+        ref="field"
         v-model="text"
-        class="input input--area"
+        class="input composer__text"
         :class="{ 'input--invalid': errors.text }"
         :aria-invalid="Boolean(errors.text)"
-        rows="4"
+        :aria-label="$t('reviews.field')"
+        rows="1"
         maxlength="1000"
-        :placeholder="$t('reviews.fieldPlaceholder')"
+        :placeholder="$t('reviews.field')"
+        @focus="expanded = true"
+        @input="fit"
       />
-      <span v-if="errors.text" class="field__error">{{ errors.text }}</span>
-    </label>
-    <button type="button" class="example" @click="text = EXAMPLE_INJECTION">
-      <code>{{ EXAMPLE_INJECTION }}</code> ← {{ $t('reviews.example') }}
-    </button>
-
-    <ImagePicker v-if="uploads" v-model="images" />
-
-    <div class="form__actions">
-      <BaseButton variant="primary" :disabled="sending" @click="send">
+      <button type="submit" class="composer__send" :disabled="sending || !text.trim()">
         {{ sending ? $t('reviews.sending') : $t('reviews.submit') }}
-      </BaseButton>
-      <p v-if="message" class="status" :class="`status--${message.kind}`">{{ message.text }}</p>
+      </button>
     </div>
-  </section>
+    <span v-if="errors.text" class="field__error">{{ errors.text }}</span>
+    <p v-if="message" class="status" :class="`status--${message.kind}`">{{ message.text }}</p>
+  </form>
 </template>
 
 <style scoped>
-.form {
+.composer {
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  max-width: 640px;
+  gap: 8px;
+  padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
+  background: var(--color-surface);
 }
 
-.field {
+.composer__extra {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
+  max-height: 40dvh;
+  overflow-y: auto;
+}
+
+/* A smaller sign-in button: here it's an option, not the point. */
+.composer__extra :deep(.login__btn) {
+  padding: 6px 12px;
+  font-size: 14px;
+}
+
+.composer__rating {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+}
+
+.composer__row {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+}
+
+.composer__avatar {
+  flex: none;
+  width: 32px;
+  height: 32px;
+  margin-bottom: 4px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.composer__text {
+  flex: 1;
+  min-width: 0;
+  resize: none;
+  border-radius: 20px;
+  line-height: 1.35;
+}
+
+.composer__send {
+  flex: none;
+  padding: 10px 4px;
+  border: none;
+  background: none;
+  color: var(--color-accent);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.composer__send:disabled {
+  opacity: 0.45;
+  cursor: default;
 }
 
 .field__label {
@@ -145,12 +219,17 @@ async function send() {
 
 .input {
   width: 100%;
-  padding: 10px 12px;
+  padding: 9px 14px;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
   background: var(--color-surface-alt);
   color: var(--color-text);
-  font-size: 15px;
+  /* 16px keeps iOS from zooming into the field. */
+  font-size: 16px;
+}
+
+.composer__text.input {
+  border-radius: 20px;
 }
 
 .input:focus {
@@ -170,11 +249,6 @@ async function send() {
   font-size: 13px;
 }
 
-.input--area {
-  resize: vertical;
-  min-height: 110px;
-}
-
 .example {
   align-self: flex-start;
   padding: 0;
@@ -192,12 +266,5 @@ async function send() {
 
 .example:hover {
   color: var(--color-accent);
-}
-
-.form__actions {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 12px;
 }
 </style>

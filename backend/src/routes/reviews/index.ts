@@ -17,6 +17,7 @@ type TextBody = { name?: string; text: string; imageIds?: string[] }
 type ReviewBody = { Body: TextBody & { project: ReviewProject; rating: number } }
 type ReplyBody = { Body: TextBody }
 type VoteBody = { Body: { value: -1 | 0 | 1 } }
+type LikeBody = { Body: { project: ReviewProject; liked: boolean } }
 
 const LIST_LIMIT = 200
 /** "Top" ranks this many latest reviews by score and shows the best LIST_LIMIT of them. */
@@ -118,7 +119,7 @@ const reviewsRoutes: FastifyPluginAsync = async (fastify): Promise<void> => {
       const voter = visitorKey(request)
       const { project } = request.query
       const top = request.query.sort !== 'new'
-      const [reviews, stats, votes, mine] = await Promise.all([
+      const [reviews, stats, votes, mine, likes, liked] = await Promise.all([
         fastify.prisma.review.findMany({
           where: { project },
           orderBy: { createdAt: 'desc' },
@@ -144,7 +145,9 @@ const reviewsRoutes: FastifyPluginAsync = async (fastify): Promise<void> => {
         fastify.prisma.vote.findMany({
           where: { voter, review: { project } },
           select: { reviewId: true, value: true }
-        })
+        }),
+        fastify.prisma.projectLike.count({ where: { project } }),
+        fastify.prisma.projectLike.count({ where: { project, voter } })
       ])
 
       const tally = new Map<number, { likes: number; dislikes: number }>()
@@ -202,6 +205,8 @@ const reviewsRoutes: FastifyPluginAsync = async (fastify): Promise<void> => {
         reviews: list.slice(0, LIST_LIMIT),
         average: stats._avg.rating,
         count: stats._count,
+        likes,
+        liked: liked > 0,
         uploads: storageEnabled(),
         owner: isOwner(request)
       }
@@ -335,6 +340,34 @@ const reviewsRoutes: FastifyPluginAsync = async (fastify): Promise<void> => {
         fastify.prisma.vote.count({ where: { reviewId, value: -1 } })
       ])
       return { likes, dislikes, myVote: value }
+    }
+  )
+
+  // The heart under a project card: liked = true likes it, false takes the like back.
+  fastify.post<LikeBody>(
+    '/likes',
+    {
+      schema: {
+        body: {
+          type: 'object',
+          required: ['project', 'liked'],
+          properties: { project: projectSchema, liked: { type: 'boolean' } }
+        }
+      }
+    },
+    async (request) => {
+      const { project, liked } = request.body
+      const voter = visitorKey(request)
+      if (liked) {
+        await fastify.prisma.projectLike.upsert({
+          where: { project_voter: { project, voter } },
+          create: { project, voter },
+          update: {}
+        })
+      } else {
+        await fastify.prisma.projectLike.deleteMany({ where: { project, voter } })
+      }
+      return { likes: await fastify.prisma.projectLike.count({ where: { project } }), liked }
     }
   )
 
