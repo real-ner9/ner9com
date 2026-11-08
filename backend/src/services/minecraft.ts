@@ -4,9 +4,9 @@ import type { FastifyBaseLogger } from 'fastify'
 import { call, onCallbackQuery, telegramBot } from './telegram'
 
 /**
- * Logins to the owner's Minecraft server (Fabric 1.21.1 in offline mode, so friends can play
- * through TLauncher; the server and its ner9-auth mod live in /root/projects/minecraft on the
- * VPS). The mod holds every player on the loading screen and asks here: a nickname registered on
+ * Logins to the owner's Minecraft server (vanilla 26.3 for the players; the server runs Fabric
+ * in offline mode, so friends can play through TLauncher; it and its server-only ner9-auth mod
+ * live in /root/projects/minecraft on the VPS). The mod holds every player on the loading screen and asks here: a nickname registered on
  * /minecraft, from an address its owner already confirmed, goes straight in; anything else makes
  * the bot ask the owner "Is it you?" and the mod polls for the answer.
  */
@@ -22,11 +22,10 @@ export const TRUST_DAYS = 30
 /** After "Not me" that address can't ask again for a while, so a stranger can't flood the bot. */
 const DENY_COOLDOWN_MS = 10 * 60 * 1000
 
-/** Where to connect and what to play on, for the page and the installer. */
+/** Where to connect and which version to pick in TLauncher, for the page. */
 export const minecraftServer = () => ({
   address: process.env.MINECRAFT_SERVER_ADDRESS || '207.180.218.99',
-  version: '1.21.1',
-  loader: 'Fabric'
+  version: '26.3'
 })
 
 /** The mod sends MINECRAFT_AUTH_SECRET in X-Minecraft-Secret; without one set, nobody gets in. */

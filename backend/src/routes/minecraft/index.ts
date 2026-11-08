@@ -11,10 +11,9 @@ import {
   registerMinecraftButtons,
   startLogin
 } from '../../services/minecraft'
-import { installerBat, packMods, packProfile } from '../../services/minecraftInstaller'
 
 // The owner's Minecraft server (services/minecraft.ts). The page /minecraft: a signed-in visitor
-// claims one nickname and downloads the installer. The server's ner9-auth mod: /logins asks
+// claims one nickname. The server's ner9-auth mod: /logins asks
 // whether a player may come in, authenticated by MINECRAFT_AUTH_SECRET.
 type AccountBody = { Body: { nickname: string; language: Language } }
 type LoginBody = { Body: { nickname: string; ip: string } }
@@ -50,7 +49,7 @@ const minecraftRoutes: FastifyPluginAsync = async (fastify): Promise<void> => {
   fastify.get('/me', async (request, reply) => {
     reply.header('Cache-Control', 'no-store')
     return {
-      server: { ...minecraftServer(), profile: packProfile, mods: packMods(), trustDays: TRUST_DAYS },
+      server: { ...minecraftServer(), trustDays: TRUST_DAYS },
       account: request.user ? await accountOf(request.user.id) : null
     }
   })
@@ -115,14 +114,6 @@ const minecraftRoutes: FastifyPluginAsync = async (fastify): Promise<void> => {
       where: { account: { tgId: request.user!.id } }
     })
     return { account: await accountOf(request.user!.id) }
-  })
-
-  fastify.get('/install.bat', async (_request, reply) => {
-    reply
-      .header('Content-Type', 'application/octet-stream')
-      .header('Content-Disposition', 'attachment; filename="ner9-minecraft.bat"')
-      .header('Cache-Control', 'no-store')
-    return installerBat()
   })
 
   fastify.post<LoginBody>(

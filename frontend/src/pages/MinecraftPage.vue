@@ -2,7 +2,6 @@
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { storeToRefs } from 'pinia'
-import BaseButton from '@/components/ui/BaseButton.vue'
 import TelegramLogin from '@/components/reviews/TelegramLogin.vue'
 import { useAuthStore } from '@/stores/auth'
 import { ApiError } from '@/api/http'
@@ -11,14 +10,13 @@ import {
   deleteAccount,
   fetchMinecraft,
   forgetAddresses,
-  installerUrl,
   saveNickname,
   type MinecraftState,
 } from '@/api/minecraft'
 
 // Accounts for the owner's Minecraft server (backend routes/minecraft): a signed-in visitor claims
 // one nickname, and the server's mod lets it in only after "It's me" in the Telegram bot. Below,
-// the installer that sets TLauncher up for the server.
+// how to join with plain TLauncher.
 const { t, locale, d } = useI18n()
 const { user } = storeToRefs(useAuthStore())
 
@@ -98,7 +96,7 @@ async function copyAddress() {
       <p class="eyebrow">{{ $t('minecraft.eyebrow') }}</p>
       <h1 class="page-title">{{ $t('minecraft.title') }}</h1>
       <p v-if="server" class="lead">
-        {{ $t('minecraft.lead', { loader: server.loader, version: server.version }) }}
+        {{ $t('minecraft.lead', { version: server.version }) }}
       </p>
     </header>
 
@@ -178,20 +176,11 @@ async function copyAddress() {
             <a href="https://tlauncher.org/" target="_blank" rel="noopener">tlauncher.org</a>
           </li>
           <li>
-            {{ $t('minecraft.step2', { version: server!.version }) }}
-            <div class="download">
-              <BaseButton :href="installerUrl()" variant="primary">
-                {{ $t('minecraft.download') }}
-              </BaseButton>
-            </div>
-            <p class="hint">{{ $t('minecraft.smartscreen') }}</p>
+            {{ $t('minecraft.step2') }}
+            <code class="pick">Release {{ server!.version }}</code>
+            <p class="hint">{{ $t('minecraft.versionHint', { version: server!.version }) }}</p>
           </li>
-          <li>
-            {{ $t('minecraft.step3') }}
-            <code class="pick">{{ server!.profile }}</code>
-            <p class="hint">{{ $t('minecraft.versionHint') }}</p>
-          </li>
-          <li>{{ $t('minecraft.step4') }}</li>
+          <li>{{ $t('minecraft.step3') }}</li>
         </ol>
 
         <div class="address">
@@ -201,12 +190,6 @@ async function copyAddress() {
             {{ copied ? $t('minecraft.copied') : $t('minecraft.copy') }}
           </button>
         </div>
-
-        <h3 class="block__subtitle">{{ $t('minecraft.mods') }}</h3>
-        <ul class="mods">
-          <li v-for="mod in server!.mods" :key="mod">{{ mod }}</li>
-        </ul>
-        <p class="hint">{{ $t('minecraft.manual', { version: server!.version }) }}</p>
       </section>
 
       <section class="card panel block" :data-title="$t('minecraft.how')">
@@ -317,8 +300,7 @@ async function copyAddress() {
   }
 }
 
-.addresses,
-.mods {
+.addresses {
   display: flex;
   flex-direction: column;
   gap: 4px;
@@ -354,10 +336,6 @@ async function copyAddress() {
   color: var(--color-accent);
   font-size: 1.05rem;
   font-weight: 700;
-}
-
-.download {
-  margin: 10px 0 6px;
 }
 
 .address {

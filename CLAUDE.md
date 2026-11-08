@@ -89,11 +89,10 @@ Comments sit under each project card as an Instagram-like row (`ProjectComments.
 
 ## Minecraft server accounts
 
-The owner's Minecraft server for friends (Fabric 1.21.1, offline mode because they play through TLauncher) runs on the VPS outside this repo: `/root/projects/minecraft` (docker compose, host network, port 25565; its `mod/` is the server-only `ner9-auth` Fabric mod). Offline mode lets anyone type any nickname, so the mod holds every login on the loading screen and asks `POST /minecraft/logins` (header `X-Minecraft-Secret` = `MINECRAFT_AUTH_SECRET`), then polls `GET /minecraft/logins/:id`.
+The owner's Minecraft server for friends (players use plain vanilla 26.3 in TLauncher; the server is Fabric with server-only mods, offline mode) runs on the VPS outside this repo: `/root/projects/minecraft` (docker compose, host network, port 25565; its `mod/` is the server-only `ner9-auth` Fabric mod). Offline mode lets anyone type any nickname, so the mod holds every login on the loading screen and asks `POST /minecraft/logins` (header `X-Minecraft-Secret` = `MINECRAFT_AUTH_SECRET`), then polls `GET /minecraft/logins/:id`.
 
 - `services/minecraft.ts`: one nickname per Telegram account (`MinecraftAccount`, unique case-insensitively, exact spelling enforced). An address confirmed with "It's me" (`MinecraftTrustedIp`) gets in without asking until unused for 30 days; otherwise the bot sends an inline-button question (callback data `mc:<id>:yes|no`, routed by `onCallbackQuery` in `services/telegram.ts`), 2 minutes to answer, "Not me" blocks that address for 10 minutes. Pending logins live in memory. Bot texts and kick messages in ru/uk/en by the account's `language`.
-- `/minecraft` page (`pages/MinecraftPage.vue`): sign in, claim/rename/delete the nickname, forget addresses, download `GET /minecraft/install.bat`.
-- `services/minecraftInstaller.ts` builds that .bat (PowerShell inside): Fabric profile + vanilla json into `%APPDATA%\.minecraft\versions`, the client mods (Modrinth URLs, SHA-1 checked; other jars moved to `mods-backup-*`), the server appended to `servers.dat`. Changing a content mod means changing it here and in the server's `MODRINTH_PROJECTS` together.
+- `/minecraft` page (`pages/MinecraftPage.vue`): sign in, claim/rename/delete the nickname, forget addresses, which TLauncher version to pick (`minecraftServer().version` — keep it equal to the server's `VERSION`) and the address. The owner dropped client mods and the .bat installer (2026-11-08): don't bring them back unless asked.
 
 ## Backend (`backend/src`)
 

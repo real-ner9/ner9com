@@ -1,14 +1,11 @@
-import { apiGet, apiSend, apiUrl } from '@/api/http'
+import { apiGet, apiSend } from '@/api/http'
 import type { Locale } from '@/i18n'
 
 /** The owner's Minecraft server (backend routes/minecraft) and the visitor's nickname on it. */
 export interface MinecraftServer {
   address: string
+  /** The vanilla version to pick in TLauncher (the server's mods are server-only). */
   version: string
-  loader: string
-  /** The Fabric profile the installer adds to TLauncher's version list. */
-  profile: string
-  mods: string[]
   /** How long a confirmed address gets in without asking. */
   trustDays: number
 }
@@ -34,5 +31,3 @@ export const deleteAccount = () => apiSend<{ account: null }>('DELETE', '/minecr
 
 export const forgetAddresses = () =>
   apiSend<{ account: MinecraftAccount }>('DELETE', '/minecraft/account/addresses')
-
-export const installerUrl = () => apiUrl('/minecraft/install.bat')
