@@ -28,7 +28,7 @@ npm run cv                   # rebuild resume PDFs in public/downloads from cont
 ```
 
 Env (gitignored):
-- `backend/.env`: `POSTGRES_*`, `DATABASE_URL` (127.0.0.1:5436); `S3_ENDPOINT` (http://127.0.0.1:9010), `S3_BUCKET`, `S3_ACCESS_KEY`, `S3_SECRET_KEY` (without them uploads are off); `TELEGRAM_BOT_TOKEN`, `TELEGRAM_BOT_USERNAME` (@ner9com_dev_bot locally, @ner9com_bot in prod); `OWNER_TELEGRAM_ID`; `SESSION_SECRET`; optional `MUSIC_DIR`.
+- `backend/.env`: `POSTGRES_*`, `DATABASE_URL` (127.0.0.1:5436); `S3_ENDPOINT` (http://127.0.0.1:9010), `S3_BUCKET`, `S3_ACCESS_KEY`, `S3_SECRET_KEY` (without them uploads are off); `TELEGRAM_BOT_TOKEN`, `TELEGRAM_BOT_USERNAME` (@ner9com_dev_bot locally, @ner9com_bot in prod); `OWNER_TELEGRAM_ID`; `SESSION_SECRET`; optional `MUSIC_DIR`; `MINECRAFT_AUTH_SECRET` (shared with the Minecraft server's mod; unset = nobody gets in), optional `MINECRAFT_SERVER_ADDRESS` (default 207.180.218.99).
 - `frontend/.env` must contain `VITE_API_BASE_URL=/api`, otherwise requests hit Vite and get HTML.
 
 ## Frontend (`frontend/src`)
@@ -47,7 +47,7 @@ utils/,"formatTime, plural, pointer capture, BeatClock, duration"
 ```
 
 - New page: file in `pages/`, route with `meta.titleKey` (i18n key; `App.vue` sets tab/window titles), nav link in `components/layout/AppHeader.vue`.
-- Routes: `/`, `/projects`, `/cv` (`/resume` redirects there — keep it), `/clothes`, 404. `/admin` is the owner's cheat sheet of deployed projects: no nav link (only the owner's account card links it), the list lives in `backend/src/services/ownerProjects.ts` and `GET /owner/projects` serves it to the owner's session only (404 for anyone else) — update it when a project moves. Don't bring back removed routes (`/music`, `/clicker`, `/game`, `/contest`, `/reviews`).
+- Routes: `/`, `/projects`, `/cv` (`/resume` redirects there — keep it), `/clothes`, 404. `/minecraft` (Minecraft server accounts, below) is linked from the account card, not the header. `/admin` is the owner's cheat sheet of deployed projects: no nav link (only the owner's account card links it), the list lives in `backend/src/services/ownerProjects.ts` and `GET /owner/projects` serves it to the owner's session only (404 for anyone else) — update it when a project moves. Don't bring back removed routes (`/music`, `/clicker`, `/game`, `/contest`, `/reviews`).
 - Three languages ru/uk/en. Every key goes into `messages/ru.ts`, `uk.ts`, `en.ts`. Every place with per-language text has all three: `content/`, `public/banned.html`, bot replies in `backend/src/services/telegram.ts`, the CV PDFs. No copy inside pages: components call `useContent()` / `$t()`.
 - Resume and home copy come word for word from the owner's LinkedIn (https://www.linkedin.com/in/savva-ai-fullstack/, since 2026-10-27: headline, About, the three jobs Teamatical / LegalShield / EPAM, NSU, languages; skill groups gather the technologies it names plus earlier skills kept on request: Angular, Next.js, MySQL, MongoDB, BullMQ, C4, FSD and the like). Never paraphrase or add claims. `content/resume.en.ts` is the source, `resume.ru.ts`/`resume.uk.ts` translate it entry for entry — edit all three. Jobs carry `dates` as "YYYY-MM" (no `to` = current job, counted to this month) and an optional `about` paragraph; `utils/duration.ts` counts total experience (overlaps once). After editing resume/profile run `npm run cv` and commit the PDFs.
 - Never put files under `public/cv/`: nginx would serve that folder instead of the `/cv` page.
@@ -87,11 +87,19 @@ Comments sit under each project card as an Instagram-like row (`ProjectComments.
 - Optional Telegram sign-in (same flow as tg-hound): one-time `t.me/<bot>?start=login_<token>`, page polls `GET /auth/telegram/:token`, backend long-polls `getUpdates`, then a signed httpOnly `ner9_session` cookie. One bot can be polled by one backend only (409), hence separate dev/prod bots. Signed in as `OWNER_TELEGRAM_ID` = "Site author" badge and delete rights everywhere. Anonymous posting stays; no moderation (owner's choice).
 - nginx resolver `127.0.0.11` exists only on a user-defined Docker network — test the config on one. nginx allows 12 MB bodies on `/api/`.
 
+## Minecraft server accounts
+
+The owner's Minecraft server for friends (Fabric 1.21.1, offline mode because they play through TLauncher) runs on the VPS outside this repo: `/root/projects/minecraft` (docker compose, host network, port 25565; its `mod/` is the server-only `ner9-auth` Fabric mod). Offline mode lets anyone type any nickname, so the mod holds every login on the loading screen and asks `POST /minecraft/logins` (header `X-Minecraft-Secret` = `MINECRAFT_AUTH_SECRET`), then polls `GET /minecraft/logins/:id`.
+
+- `services/minecraft.ts`: one nickname per Telegram account (`MinecraftAccount`, unique case-insensitively, exact spelling enforced). An address confirmed with "It's me" (`MinecraftTrustedIp`) gets in without asking until unused for 30 days; otherwise the bot sends an inline-button question (callback data `mc:<id>:yes|no`, routed by `onCallbackQuery` in `services/telegram.ts`), 2 minutes to answer, "Not me" blocks that address for 10 minutes. Pending logins live in memory. Bot texts and kick messages in ru/uk/en by the account's `language`.
+- `/minecraft` page (`pages/MinecraftPage.vue`): sign in, claim/rename/delete the nickname, forget addresses, download `GET /minecraft/install.bat`.
+- `services/minecraftInstaller.ts` builds that .bat (PowerShell inside): Fabric profile + vanilla json into `%APPDATA%\.minecraft\versions`, the client mods (Modrinth URLs, SHA-1 checked; other jars moved to `mods-backup-*`), the server appended to `servers.dat`. Changing a content mod means changing it here and in the server's `MODRINTH_PROJECTS` together.
+
 ## Backend (`backend/src`)
 
 - fastify-cli autoload: `plugins/` first, then every folder in `routes/` (prefix via `export const autoPrefix`). Vite strips `/api`, so routes have no `/api`.
 - `npm run dev` serves from `dist/`: after deleting a source file delete its `dist/` counterpart, or autoload keeps registering it.
-- `plugins/prisma.ts` throws at startup without `DATABASE_URL`. Models: `VisitorState` (`GET/PUT /state/:id`, UUID ids, 8 KB limit; `{state: null}` for new visitors), `Review`, `Reply`, `Vote`, `ProjectLike`, `Ban`.
+- `plugins/prisma.ts` throws at startup without `DATABASE_URL`. Models: `MinecraftAccount`, `MinecraftTrustedIp`, `VisitorState` (`GET/PUT /state/:id`, UUID ids, 8 KB limit; `{state: null}` for new visitors), `Review`, `Reply`, `Vote`, `ProjectLike`, `Ban`.
 - Visitor sync (`stores/visitorSync.ts`): anonymous UUID in the `ner9_visitor` cookie keys theme, language, dancers, player modes and resume track; localStorage is the instant copy, the backend copy wins only if its `savedAt` is newer.
 - Music: `services/local-music.service.ts` reads `$MUSIC_DIR/<album>/<tracks>` (default `backend/music`, the old 11 albums). Ids are 16-char path hashes — keep them short, Fastify 404s params over 100 chars. Cyrillic MP3 tags in Windows-1251 are re-decoded (`fixCyrillic`); zero-byte files are skipped; `mimeType` carries the codec for .m4a and the frontend hides what the browser can't play.
 - Full library: the owner's `Desktop/Music` (~57 GB) is built by `backend/scripts/build_web_library.py` into `C:\ner9-music-web` (~27 GB, AAC 256 for lossless, `--extra` adds public-domain albums). It is not in git. Upload with rsync from a container (Git Bash has none):

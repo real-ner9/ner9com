@@ -5,6 +5,11 @@ import { useAuthStore } from '@/stores/auth'
 // The sign-in line above the review form (optional: anonymous posting stays). Signed out, a
 // button that opens the sign-in bot in Telegram (the same as the header's); signed in, who the
 // review will be signed as.
+defineProps<{
+  /** Under the button while signed out; the reviews' own line by default. */
+  hint?: string
+}>()
+
 const auth = useAuthStore()
 const { user, owner, available, link, error } = storeToRefs(auth)
 </script>
@@ -33,7 +38,7 @@ const { user, owner, available, link, error } = storeToRefs(auth)
       {{ $t('auth.waiting') }}
       <a :href="link" target="_blank" rel="noopener">{{ $t('auth.openBot') }}</a>
     </p>
-    <p v-else class="login__hint">{{ $t('reviews.signInHint') }}</p>
+    <p v-else class="login__hint">{{ hint ?? $t('reviews.signInHint') }}</p>
     <p v-if="error" class="status status--error">{{ error }}</p>
   </div>
 </template>

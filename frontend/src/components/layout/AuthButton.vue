@@ -87,6 +87,9 @@ onBeforeUnmount(() => {
       <RouterLink v-if="owner" to="/admin" class="account__username" @click="open = false">{{
         $t('nav.admin')
       }}</RouterLink>
+      <RouterLink to="/minecraft" class="account__username" @click="open = false">{{
+        $t('nav.minecraft')
+      }}</RouterLink>
       <button type="button" class="account__logout" @click="signOut">
         {{ $t('auth.signOut') }}
       </button>

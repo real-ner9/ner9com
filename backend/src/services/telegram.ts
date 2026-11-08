@@ -62,7 +62,7 @@ function confirmLogin(token: string, user: SessionUser) {
 
 // --- The bot ----------------------------------------------------------------------------------
 
-interface TelegramUser {
+export interface TelegramUser {
   id: number
   first_name: string
   last_name?: string
@@ -77,6 +77,23 @@ interface Update {
     chat: { id: number; type: string }
     from?: TelegramUser
   }
+  callback_query?: CallbackQuery
+}
+
+/** An inline button pressed under one of the bot's messages. */
+export interface CallbackQuery {
+  id: string
+  from: TelegramUser
+  data?: string
+}
+
+type CallbackHandler = (query: CallbackQuery, data: string) => Promise<void>
+
+/** Inline buttons by the prefix of their callback data ("mc:" for services/minecraft.ts). */
+const callbackHandlers = new Map<string, CallbackHandler>()
+
+export function onCallbackQuery(prefix: string, handler: CallbackHandler) {
+  callbackHandlers.set(prefix, handler)
 }
 
 class TelegramError extends Error {
@@ -88,7 +105,7 @@ class TelegramError extends Error {
   }
 }
 
-async function call<T>(token: string, method: string, body: object, signal?: AbortSignal) {
+export async function call<T>(token: string, method: string, body: object, signal?: AbortSignal) {
   const response = await fetch(`https://api.telegram.org/bot${token}/${method}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -153,6 +170,14 @@ const TEXTS = {
 }
 
 async function handle(token: string, update: Update, log: FastifyBaseLogger) {
+  const query = update.callback_query
+  if (query) {
+    const data = query.data ?? ''
+    const prefix = [...callbackHandlers.keys()].find((key) => data.startsWith(key))
+    if (prefix) await callbackHandlers.get(prefix)!(query, data.slice(prefix.length))
+    else await call(token, 'answerCallbackQuery', { callback_query_id: query.id })
+    return
+  }
   const message = update.message
   const from = message?.from
   if (!message?.text?.startsWith('/start') || message.chat.type !== 'private' || !from) return
@@ -188,7 +213,7 @@ export async function runBot(log: FastifyBaseLogger, signal: AbortSignal) {
       const updates = await call<Update[]>(
         bot.token,
         'getUpdates',
-        { offset, timeout: 25, allowed_updates: ['message'] },
+        { offset, timeout: 25, allowed_updates: ['message', 'callback_query'] },
         signal
       )
       for (const update of updates) {

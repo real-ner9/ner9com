@@ -43,6 +43,13 @@ const router = createRouter({
       component: () => import('@/pages/AdminPage.vue'),
       meta: { titleKey: 'nav.admin' },
     },
+    // Accounts for the owner's Minecraft server: linked from the account card, not the header.
+    {
+      path: '/minecraft',
+      name: 'minecraft',
+      component: () => import('@/pages/MinecraftPage.vue'),
+      meta: { titleKey: 'nav.minecraft' },
+    },
     {
       path: '/:pathMatch(.*)*',
       name: 'not-found',

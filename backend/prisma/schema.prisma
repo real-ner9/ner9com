@@ -112,3 +112,32 @@ model Ban {
 
   @@index([ip])
 }
+
+/// A nickname on the owner's Minecraft server, owned by one Telegram account. The server runs in
+/// offline mode (TLauncher), so its ner9-auth mod lets the nickname in only from an address the
+/// owner confirmed in the bot (routes/minecraft, services/minecraft.ts).
+model MinecraftAccount {
+  id          Int                  @id @default(autoincrement())
+  /// One nickname per Telegram account.
+  tgId        String               @unique @db.VarChar(20)
+  /// As typed: offline-mode players are told apart by the exact spelling.
+  nickname    String               @db.VarChar(16)
+  /// Lower-cased: "Steve" and "steve" can't belong to two people.
+  nicknameKey String               @unique @db.VarChar(16)
+  /// Language of the bot's questions: "ru", "uk" or "en", the site's language when registering.
+  language    String               @default("ru") @db.VarChar(2)
+  createdAt   DateTime             @default(now())
+  trustedIps  MinecraftTrustedIp[]
+}
+
+/// An address the owner confirmed with "It's me": logins from it skip the question until it has
+/// gone unused for a while (TRUST_DAYS).
+model MinecraftTrustedIp {
+  id         Int              @id @default(autoincrement())
+  accountId  Int
+  account    MinecraftAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  ip         String           @db.VarChar(64)
+  lastUsedAt DateTime         @default(now())
+
+  @@unique([accountId, ip])
+}
