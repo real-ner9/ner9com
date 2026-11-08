@@ -186,7 +186,12 @@ async function copyAddress() {
             </div>
             <p class="hint">{{ $t('minecraft.smartscreen') }}</p>
           </li>
-          <li>{{ $t('minecraft.step3', { profile: server!.profile }) }}</li>
+          <li>
+            {{ $t('minecraft.step3') }}
+            <code class="pick">{{ server!.profile }}</code>
+            <p class="hint">{{ $t('minecraft.versionHint') }}</p>
+          </li>
+          <li>{{ $t('minecraft.step4') }}</li>
         </ol>
 
         <div class="address">
@@ -336,6 +341,19 @@ async function copyAddress() {
   a {
     color: var(--color-accent);
   }
+}
+
+.pick {
+  display: block;
+  width: fit-content;
+  max-width: 100%;
+  margin: 8px 0 4px;
+  padding: 6px 12px;
+  border: 1px solid var(--color-accent);
+  border-radius: 6px;
+  color: var(--color-accent);
+  font-size: 1.05rem;
+  font-weight: 700;
 }
 
 .download {
